@@ -1,0 +1,14 @@
+node_modules
+.next
+coverage
+dist
+playwright-report
+test-results
+.env
+.env.local
+.env.test.local
+.DS_Store
+*.log
+data/storage
+.github
+.codex

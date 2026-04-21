@@ -1,0 +1,64 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: doc_llm
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d doc_llm"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  web:
+    build:
+      context: .
+      target: dev
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/doc_llm
+      NEXTAUTH_URL: http://localhost:3000
+      APP_URL: http://localhost:3000
+      LOCAL_STORAGE_ROOT: /app/data/storage
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - web_node_modules:/app/node_modules
+      - next_cache:/app/.next
+      - storage_data:/app/data/storage
+    command: ["npm", "run", "dev", "--", "--hostname", "0.0.0.0"]
+
+  worker:
+    build:
+      context: .
+      target: dev
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/doc_llm
+      LOCAL_STORAGE_ROOT: /app/data/storage
+    volumes:
+      - .:/app
+      - web_node_modules:/app/node_modules
+      - storage_data:/app/data/storage
+    command: ["npm", "run", "worker:dev"]
+
+volumes:
+  next_cache:
+  postgres_data:
+  storage_data:
+  web_node_modules:
