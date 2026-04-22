@@ -24,7 +24,7 @@ export default async function DashboardPage() {
           <p className="muted-text">Documents tracked</p>
         </article>
         <article className="surface stack-xs">
-          <h2>{dashboard.stats.readyDocumentCount}</h2>
+          <h2>{dashboard.stats.processedDocumentCount}</h2>
           <p className="muted-text">Documents indexed</p>
         </article>
         <article className="surface stack-xs">

@@ -6,69 +6,52 @@ import { documents, ingestionJobs } from "@/db/schema";
 import { getSeededUser } from "../../helpers/db";
 
 const requireApiSessionMock = vi.hoisted(() => vi.fn());
-const storageFixture = vi.hoisted(() => {
-  const objects = new Map<
-    string,
-    {
-      key: string;
-      body: Buffer;
-      contentType: string;
-      metadata: Record<string, string>;
-      size: number;
-    }
-  >();
-
-  return {
-    objects,
-    storage: {
-      createObjectKey: vi.fn((parts: string[]) => parts.join("/")),
-      putObject: vi.fn(
-        async ({
-          key,
-          body,
-          contentType,
-          metadata,
-        }: {
-          key: string;
-          body: Buffer;
-          contentType?: string;
-          metadata?: Record<string, string>;
-        }) => {
-          objects.set(key, {
-            key,
-            body,
-            contentType: contentType ?? "text/plain",
-            metadata: metadata ?? {},
-            size: body.byteLength,
-          });
-
-          return { key, size: body.byteLength };
-        },
-      ),
-      getObject: vi.fn(async (key: string) => {
-        const object = objects.get(key);
-
-        if (!object) {
-          throw new Error(`Object ${key} not found.`);
-        }
-
-        return object;
+const storageFixture = vi.hoisted(() => ({
+  storage: {
+    backend: "local" as const,
+    putObject: vi.fn(
+      async ({
+        key,
+        body,
+        contentType,
+        originalFilename,
+        checksum,
+      }: {
+        key: string;
+        body: Buffer;
+        contentType: string;
+        originalFilename: string;
+        checksum?: string;
+      }) => ({
+        backend: "local" as const,
+        key,
+        originalFilename,
+        contentType,
+        byteSize: body.byteLength,
+        checksum: checksum ?? null,
       }),
-      deleteObject: vi.fn(async (key: string) => {
-        objects.delete(key);
-      }),
-    },
-  };
-});
+    ),
+    getObjectStream: vi.fn(),
+    getObjectBuffer: vi.fn(),
+    deleteObject: vi.fn(),
+    exists: vi.fn(),
+    getPublicUrl: vi.fn(() => null),
+  },
+}));
 
 vi.mock("@/auth/session", () => ({
   UnauthorizedError: class UnauthorizedError extends Error {},
   requireApiSession: requireApiSessionMock,
 }));
 
-vi.mock("@/lib/services/storage", () => ({
-  createObjectStorage: () => storageFixture.storage,
-}));
+vi.mock("@/server/storage", async () => {
+  const actual = await vi.importActual<typeof import("@/server/storage")>("@/server/storage");
+
+  return {
+    ...actual,
+    getObjectStorageService: () => storageFixture.storage,
+  };
+});
 
 import { POST } from "@/app/api/ingestion-jobs/route";
 
@@ -116,6 +99,8 @@ describe("POST /api/ingestion-jobs", () => {
       .limit(1);
 
     expect(document?.title).toBe("Support call notes");
+    expect(document?.storageBackend).toBe("local");
+    expect(document?.status).toBe("queued");
     expect(job?.status).toBe("pending");
     expect(storageFixture.storage.putObject).toHaveBeenCalledTimes(1);
   });

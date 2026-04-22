@@ -1,11 +1,26 @@
-import "server-only";
-
 import { z } from "zod";
 
 import {
   DEFAULT_EMBEDDING_DIMENSION,
   DEFAULT_INGESTION_QUERY_MATCH_LIMIT,
+  DEFAULT_MAX_UPLOAD_SIZE_BYTES,
 } from "@/lib/constants";
+
+const booleanStringSchema = z
+  .union([z.literal("true"), z.literal("false"), z.boolean()])
+  .transform((value) => value === true || value === "true");
+
+const rawEnv = {
+  ...process.env,
+  STORAGE_BACKEND:
+    process.env.STORAGE_BACKEND ?? process.env.OBJECT_STORAGE_DRIVER ?? "local",
+  STORAGE_LOCAL_DIR:
+    process.env.STORAGE_LOCAL_DIR ?? process.env.LOCAL_STORAGE_ROOT ?? "./data/uploads",
+  STORAGE_MAX_UPLOAD_SIZE_BYTES:
+    process.env.STORAGE_MAX_UPLOAD_SIZE_BYTES ??
+    process.env.UPLOAD_MAX_FILE_SIZE_BYTES ??
+    String(DEFAULT_MAX_UPLOAD_SIZE_BYTES),
+};
 
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
@@ -24,8 +39,20 @@ const envSchema = z.object({
     .refine((value) => value === DEFAULT_EMBEDDING_DIMENSION, {
       message: `This starter expects ${DEFAULT_EMBEDDING_DIMENSION}-dimension embeddings. Update the schema and migrations before changing it.`,
     }),
-  OBJECT_STORAGE_DRIVER: z.enum(["local", "s3"]).default("local"),
-  LOCAL_STORAGE_ROOT: z.string().min(1),
+  STORAGE_BACKEND: z.enum(["local", "s3"]).default("local"),
+  STORAGE_LOCAL_DIR: z.string().min(1),
+  STORAGE_MAX_UPLOAD_SIZE_BYTES: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(DEFAULT_MAX_UPLOAD_SIZE_BYTES),
+  AWS_REGION: z.string().min(1).optional(),
+  AWS_S3_BUCKET: z.string().min(1).optional(),
+  AWS_ACCESS_KEY_ID: z.string().min(1).optional(),
+  AWS_SECRET_ACCESS_KEY: z.string().min(1).optional(),
+  AWS_S3_ENDPOINT: z.string().url().optional(),
+  AWS_S3_FORCE_PATH_STYLE: booleanStringSchema.optional().default(false),
+  AWS_S3_PREFIX: z.string().optional(),
   WORKER_POLL_INTERVAL_MS: z.coerce.number().int().positive().default(5000),
   INGESTION_MAX_CHUNK_SIZE: z.coerce.number().int().positive().default(1200),
   INGESTION_CHUNK_OVERLAP: z.coerce.number().int().min(0).default(200),
@@ -38,7 +65,7 @@ const envSchema = z.object({
   DEMO_USER_PASSWORD: z.string().min(8),
 });
 
-const parsed = envSchema.safeParse(process.env);
+const parsed = envSchema.safeParse(rawEnv);
 
 if (!parsed.success) {
   throw new Error(

@@ -41,14 +41,20 @@ describe("GET /api/documents", () => {
       {
         ownerId: seededUser.id,
         title: "Visible document",
-        sourceObjectKey: "documents/visible.txt",
-        sourceMimeType: "text/plain",
+        originalFilename: "visible.pdf",
+        storageBackend: "local",
+        storageKey: "documents/visible.pdf",
+        contentType: "application/pdf",
+        byteSize: 1024,
       },
       {
         ownerId: otherUser.id,
         title: "Hidden document",
-        sourceObjectKey: "documents/hidden.txt",
-        sourceMimeType: "text/plain",
+        originalFilename: "hidden.pdf",
+        storageBackend: "local",
+        storageKey: "documents/hidden.pdf",
+        contentType: "application/pdf",
+        byteSize: 2048,
       },
     ]);
 

@@ -6,25 +6,33 @@ import { useRouter } from "next/navigation";
 export function DocumentUploadForm() {
   const router = useRouter();
   const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
+  const [file, setFile] = useState<File | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (!file) {
+      setErrorMessage("Select a PDF file before uploading.");
+      return;
+    }
+
     setIsSubmitting(true);
     setStatusMessage(null);
+    setErrorMessage(null);
 
-    const response = await fetch("/api/ingestion-jobs", {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    if (title.trim()) {
+      formData.append("title", title.trim());
+    }
+
+    const response = await fetch("/api/documents/upload", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        title,
-        content,
-        mimeType: "text/plain",
-      }),
+      body: formData,
     });
 
     const payload = (await response.json()) as { error?: string };
@@ -32,13 +40,13 @@ export function DocumentUploadForm() {
     setIsSubmitting(false);
 
     if (!response.ok) {
-      setStatusMessage(payload.error ?? "Failed to create ingestion job.");
+      setErrorMessage(payload.error ?? "Failed to upload the PDF.");
       return;
     }
 
     setTitle("");
-    setContent("");
-    setStatusMessage("Document queued for ingestion.");
+    setFile(null);
+    setStatusMessage("PDF uploaded and queued for ingestion.");
     router.refresh();
   }
 
@@ -54,30 +62,29 @@ export function DocumentUploadForm() {
           type="text"
           value={title}
           onChange={(event) => setTitle(event.target.value)}
-          placeholder="Quarterly support review"
-          required
+          placeholder="Optional display title"
         />
       </div>
 
       <div className="stack-xs">
-        <label className="label" htmlFor="content">
-          Source text
+        <label className="label" htmlFor="file">
+          PDF file
         </label>
-        <textarea
-          id="content"
-          className="textarea"
-          value={content}
-          onChange={(event) => setContent(event.target.value)}
-          placeholder="Paste source text here to enqueue an ingestion job."
-          rows={10}
+        <input
+          id="file"
+          className="input"
+          type="file"
+          accept=".pdf,application/pdf"
+          onChange={(event) => setFile(event.target.files?.[0] ?? null)}
           required
         />
       </div>
 
       {statusMessage ? <p className="muted-text">{statusMessage}</p> : null}
+      {errorMessage ? <p className="text-error">{errorMessage}</p> : null}
 
       <button className="button" type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Queueing..." : "Create ingestion job"}
+        {isSubmitting ? "Uploading..." : "Upload PDF"}
       </button>
     </form>
   );

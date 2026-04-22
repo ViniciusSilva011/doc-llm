@@ -1,32 +1,33 @@
-import { createHash, randomUUID } from "node:crypto";
-
 import { createDocument } from "@/lib/services/documents/repository";
 import { createIngestionJob } from "@/lib/services/ingestion/jobs";
-import { createObjectStorage } from "@/lib/services/storage";
+import {
+  computeSha256Hex,
+  createDocumentStorageKey,
+  getObjectStorageService,
+  sanitizeFilename,
+} from "@/server/storage";
 import type { CreateIngestionJobInput } from "@/lib/validations/ingestion";
 
 export async function enqueueIngestionJob(
   userId: string,
   input: CreateIngestionJobInput,
 ) {
-  const storage = createObjectStorage();
+  const storage = getObjectStorageService();
   const extension = input.mimeType.includes("json") ? "json" : "txt";
-  const objectKey = storage.createObjectKey([
-    "documents",
-    userId,
-    `${randomUUID()}.${extension}`,
-  ]);
+  const originalFilename = sanitizeFilename(`${input.title}.${extension}`);
+  const objectKey = createDocumentStorageKey({
+    ownerId: userId,
+    originalFilename: `${originalFilename.replace(/\.[^.]+$/, "")}.pdf`,
+  }).replace(/\.pdf$/, `.${extension}`);
   const body = Buffer.from(input.content, "utf8");
-  const checksum = createHash("sha256").update(body).digest("hex");
+  const checksum = computeSha256Hex(body);
 
-  await storage.putObject({
+  const storedObject = await storage.putObject({
     key: objectKey,
     body,
+    originalFilename,
     contentType: input.mimeType,
-    metadata: {
-      title: input.title,
-      checksum,
-    },
+    checksum,
   });
 
   const document = await createDocument(
@@ -34,17 +35,25 @@ export async function enqueueIngestionJob(
       ? {
           ownerId: userId,
           title: input.title,
-          sourceObjectKey: objectKey,
-          sourceMimeType: input.mimeType,
-          sourceChecksum: checksum,
+          originalFilename: storedObject.originalFilename,
+          storageBackend: storedObject.backend,
+          storageKey: storedObject.key,
+          contentType: storedObject.contentType,
+          byteSize: storedObject.byteSize,
+          checksum,
+          status: "queued",
           metadata: input.metadata,
         }
       : {
           ownerId: userId,
           title: input.title,
-          sourceObjectKey: objectKey,
-          sourceMimeType: input.mimeType,
-          sourceChecksum: checksum,
+          originalFilename: storedObject.originalFilename,
+          storageBackend: storedObject.backend,
+          storageKey: storedObject.key,
+          contentType: storedObject.contentType,
+          byteSize: storedObject.byteSize,
+          checksum,
+          status: "queued",
         },
   );
 

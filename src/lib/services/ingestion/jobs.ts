@@ -1,5 +1,3 @@
-import "server-only";
-
 import { count, desc, eq, sql } from "drizzle-orm";
 
 import { db } from "@/db/client";
@@ -61,19 +59,48 @@ export async function completeIngestionJob(jobId: string) {
   return job;
 }
 
-export async function failIngestionJob(jobId: string, errorMessage: string) {
+export async function failIngestionJob(
+  jobId: string,
+  errorMessage: string,
+  options?: {
+    retryable?: boolean;
+  },
+) {
+  const [currentJob] = await db
+    .select({
+      attemptCount: ingestionJobs.attemptCount,
+      maxAttempts: ingestionJobs.maxAttempts,
+    })
+    .from(ingestionJobs)
+    .where(eq(ingestionJobs.id, jobId))
+    .limit(1);
+
+  if (!currentJob) {
+    return null;
+  }
+
+  const retryable = options?.retryable ?? true;
+  const nextStatus =
+    retryable && currentJob.attemptCount < currentJob.maxAttempts
+      ? "pending"
+      : ("failed" as const);
+
   const [job] = await db
     .update(ingestionJobs)
     .set({
-      status: "failed",
+      status: nextStatus,
       errorMessage,
-      finishedAt: new Date(),
+      startedAt: null,
+      finishedAt: nextStatus === "failed" ? new Date() : null,
       updatedAt: new Date(),
     })
     .where(eq(ingestionJobs.id, jobId))
     .returning();
 
-  return job;
+  return {
+    job,
+    willRetry: nextStatus === "pending",
+  };
 }
 
 export async function listRecentJobsForUser(userId: string) {

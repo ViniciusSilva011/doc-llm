@@ -1,5 +1,3 @@
-import "server-only";
-
 import { and, count, desc, eq, inArray, sql } from "drizzle-orm";
 
 import { db } from "@/db/client";
@@ -9,9 +7,13 @@ import type { TextChunk } from "@/types/ingestion";
 export async function createDocument(input: {
   ownerId: string;
   title: string;
-  sourceObjectKey: string;
-  sourceMimeType: string;
-  sourceChecksum?: string;
+  originalFilename: string;
+  storageBackend: "local" | "s3";
+  storageKey: string;
+  contentType: string;
+  byteSize: number;
+  checksum?: string;
+  status?: "uploaded" | "queued" | "processing" | "processed" | "failed";
   metadata?: Record<string, unknown>;
 }) {
   const [document] = await db
@@ -19,9 +21,13 @@ export async function createDocument(input: {
     .values({
       ownerId: input.ownerId,
       title: input.title,
-      sourceObjectKey: input.sourceObjectKey,
-      sourceMimeType: input.sourceMimeType,
-      sourceChecksum: input.sourceChecksum,
+      originalFilename: input.originalFilename,
+      status: input.status ?? "uploaded",
+      storageBackend: input.storageBackend,
+      storageKey: input.storageKey,
+      contentType: input.contentType,
+      byteSize: input.byteSize,
+      checksum: input.checksum,
       metadata: input.metadata ?? {},
     })
     .returning();
@@ -48,8 +54,11 @@ export async function listDocumentsForUser(userId: string) {
     .select({
       id: documents.id,
       title: documents.title,
+      originalFilename: documents.originalFilename,
       status: documents.status,
-      sourceMimeType: documents.sourceMimeType,
+      storageBackend: documents.storageBackend,
+      contentType: documents.contentType,
+      byteSize: documents.byteSize,
       lastIngestedAt: documents.lastIngestedAt,
       createdAt: documents.createdAt,
       updatedAt: documents.updatedAt,
@@ -85,11 +94,11 @@ export async function replaceDocumentChunks(documentId: string, chunks: TextChun
 
 export async function updateDocumentStatus(input: {
   documentId: string;
-  status: "pending" | "processing" | "ready" | "failed";
+  status: "uploaded" | "queued" | "processing" | "processed" | "failed";
   lastIngestedAt?: Date;
 }) {
   const updatePayload: {
-    status: "pending" | "processing" | "ready" | "failed";
+    status: "uploaded" | "queued" | "processing" | "processed" | "failed";
     updatedAt: Date;
     lastIngestedAt?: Date;
   } = {
@@ -121,15 +130,15 @@ export async function countDashboardStats(userId: string) {
     .from(ingestionJobs)
     .where(eq(ingestionJobs.createdByUserId, userId));
 
-  const [readyDocumentCount] = await db
+  const [processedDocumentCount] = await db
     .select({ value: count(documents.id) })
     .from(documents)
-    .where(and(eq(documents.ownerId, userId), eq(documents.status, "ready")));
+    .where(and(eq(documents.ownerId, userId), eq(documents.status, "processed")));
 
   return {
     documentCount: documentCount?.value ?? 0,
     ingestionJobCount: jobCount?.value ?? 0,
-    readyDocumentCount: readyDocumentCount?.value ?? 0,
+    processedDocumentCount: processedDocumentCount?.value ?? 0,
   };
 }
 

@@ -1,3 +1,5 @@
+import pdf from "@cedrugs/pdf-parse";
+
 export interface ExtractedText {
   text: string;
   metadata: Record<string, unknown>;
@@ -10,6 +12,20 @@ export class TextExtractionService {
     objectKey: string;
   }): Promise<ExtractedText> {
     const normalizedContentType = params.contentType.toLowerCase();
+
+    if (normalizedContentType === "application/pdf") {
+      const parsed = await pdf(params.body);
+
+      return {
+        text: parsed.text.trim(),
+        metadata: {
+          objectKey: params.objectKey,
+          extractedAs: "pdf",
+          pageCount: parsed.numpages,
+          info: parsed.info ?? null,
+        },
+      };
+    }
 
     if (normalizedContentType.includes("application/json")) {
       const json = JSON.parse(params.body.toString("utf8")) as unknown;
@@ -35,7 +51,6 @@ export class TextExtractionService {
       metadata: {
         objectKey: params.objectKey,
         extractedAs: "fallback-text",
-        todo: "Replace with a real extraction pipeline for PDFs, Office files, and images.",
       },
     };
   }

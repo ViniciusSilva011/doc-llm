@@ -1,7 +1,7 @@
 import { requirePageSession } from "@/auth/session";
 import { DocumentUploadForm } from "@/components/documents/document-upload-form";
 import { listDocumentsForUser } from "@/lib/services/documents/repository";
-import { formatDateTime } from "@/lib/utils";
+import { formatBytes, formatDateTime } from "@/lib/utils";
 
 export default async function DocumentsPage() {
   const session = await requirePageSession();
@@ -11,11 +11,10 @@ export default async function DocumentsPage() {
     <div className="container page-grid">
       <section className="stack-sm">
         <p className="pill">Documents</p>
-        <h1>Queue source content for ingestion.</h1>
+        <h1>Upload PDF documents for ingestion.</h1>
         <p className="muted-text">
-          The current UI accepts pasted text for local development, but the storage
-          layer is already abstracted so file uploads and external object sources can
-          slot in next.
+          Upload a PDF and the app will persist it through the configured storage
+          backend, create a document record, and queue it for the worker.
         </p>
       </section>
 
@@ -36,6 +35,9 @@ export default async function DocumentsPage() {
               <thead>
                 <tr>
                   <th>Title</th>
+                  <th>Filename</th>
+                  <th>Backend</th>
+                  <th>Size</th>
                   <th>Status</th>
                   <th>Chunks</th>
                   <th>Updated</th>
@@ -46,6 +48,9 @@ export default async function DocumentsPage() {
                   documents.map((document) => (
                     <tr key={document.id}>
                       <td>{document.title}</td>
+                      <td>{document.originalFilename}</td>
+                      <td>{document.storageBackend}</td>
+                      <td>{formatBytes(document.byteSize)}</td>
                       <td>{document.status}</td>
                       <td>{document.chunkCount}</td>
                       <td>{formatDateTime(document.updatedAt)}</td>
@@ -53,7 +58,7 @@ export default async function DocumentsPage() {
                   ))
                 ) : (
                   <tr>
-                    <td className="muted-text" colSpan={4}>
+                    <td className="muted-text" colSpan={7}>
                       No documents have been submitted yet.
                     </td>
                   </tr>

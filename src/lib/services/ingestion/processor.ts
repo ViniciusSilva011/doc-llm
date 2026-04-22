@@ -10,14 +10,18 @@ import {
 import { chunkText } from "@/lib/services/ingestion/chunking";
 import { TextExtractionService } from "@/lib/services/ingestion/extractor";
 import type { OpenAIService } from "@/lib/services/openai/service";
-import { createObjectStorage, type ObjectStorage } from "@/lib/services/storage";
+import {
+  getObjectStorageService,
+  StorageObjectNotFoundError,
+  type ObjectStorageService,
+} from "@/server/storage";
 
 export class IngestionProcessor {
   constructor(
     private readonly dependencies: {
       extractor: TextExtractionService;
       openAI: OpenAIService;
-      storage?: ObjectStorage;
+      storage?: ObjectStorageService;
     },
   ) {}
 
@@ -25,10 +29,13 @@ export class IngestionProcessor {
     id: string;
     documentId: string;
   }): Promise<{ chunkCount: number }> {
-    const storage = this.dependencies.storage ?? createObjectStorage();
+    const storage = this.dependencies.storage ?? getObjectStorageService();
     const document = await getDocumentById(job.documentId);
 
     if (!document) {
+      await failIngestionJob(job.id, `Document ${job.documentId} was not found.`, {
+        retryable: false,
+      });
       throw new Error(`Document ${job.documentId} was not found.`);
     }
 
@@ -38,11 +45,11 @@ export class IngestionProcessor {
     });
 
     try {
-      const source = await storage.getObject(document.sourceObjectKey);
+      const source = await storage.getObjectBuffer(document.storageKey);
       const extracted = await this.dependencies.extractor.extract({
-        body: source.body,
-        contentType: source.contentType || document.sourceMimeType,
-        objectKey: document.sourceObjectKey,
+        body: source,
+        contentType: document.contentType,
+        objectKey: document.storageKey,
       });
       const chunks = chunkText(extracted.text);
       const embeddings = await this.dependencies.openAI.createEmbeddings(
@@ -52,21 +59,25 @@ export class IngestionProcessor {
       await replaceDocumentChunks(document.id, chunks, embeddings);
       await updateDocumentStatus({
         documentId: document.id,
-        status: "ready",
+        status: "processed",
         lastIngestedAt: new Date(),
       });
       await completeIngestionJob(job.id);
 
       return { chunkCount: chunks.length };
     } catch (error) {
-      await updateDocumentStatus({
-        documentId: document.id,
-        status: "failed",
-      });
-      await failIngestionJob(
+      const failedJob = await failIngestionJob(
         job.id,
         error instanceof Error ? error.message : "Unknown ingestion error",
+        {
+          retryable: !(error instanceof StorageObjectNotFoundError),
+        },
       );
+
+      await updateDocumentStatus({
+        documentId: document.id,
+        status: failedJob?.willRetry ? "queued" : "failed",
+      });
       throw error;
     }
   }

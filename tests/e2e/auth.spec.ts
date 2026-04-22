@@ -9,5 +9,6 @@ test("user can sign in and reach the dashboard", async ({ page }) => {
   await page.getByRole("button", { name: "Sign in" }).click();
 
   await expect(page).toHaveURL(/\/dashboard$/);
+
   await expect(page.getByRole("heading", { name: /Welcome back/i })).toBeVisible();
 });

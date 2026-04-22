@@ -47,8 +47,11 @@ describe("POST /api/query", () => {
       .values({
         ownerId: otherUser.id,
         title: "Other team doc",
-        sourceObjectKey: "documents/other.txt",
-        sourceMimeType: "text/plain",
+        originalFilename: "other.pdf",
+        storageBackend: "local",
+        storageKey: "documents/other.pdf",
+        contentType: "application/pdf",
+        byteSize: 512,
       })
       .returning();
 
@@ -89,8 +92,11 @@ describe("POST /api/query", () => {
       .values({
         ownerId: seededUser.id,
         title: "Owned doc",
-        sourceObjectKey: "documents/owned.txt",
-        sourceMimeType: "text/plain",
+        originalFilename: "owned.pdf",
+        storageBackend: "local",
+        storageKey: "documents/owned.pdf",
+        contentType: "application/pdf",
+        byteSize: 512,
       })
       .returning();
 

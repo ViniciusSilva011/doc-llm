@@ -21,13 +21,18 @@ export function applyTestEnv() {
     OPENAI_EMBEDDING_MODEL:
       process.env.OPENAI_EMBEDDING_MODEL ?? "text-embedding-3-small",
     EMBEDDING_DIMENSION: process.env.EMBEDDING_DIMENSION ?? "1536",
-    OBJECT_STORAGE_DRIVER: process.env.OBJECT_STORAGE_DRIVER ?? "local",
-    LOCAL_STORAGE_ROOT: process.env.LOCAL_STORAGE_ROOT ?? "./data/storage",
+    STORAGE_BACKEND:
+      process.env.STORAGE_BACKEND ?? process.env.OBJECT_STORAGE_DRIVER ?? "local",
+    STORAGE_LOCAL_DIR:
+      process.env.STORAGE_LOCAL_DIR ?? process.env.LOCAL_STORAGE_ROOT ?? "./data/uploads",
+    STORAGE_MAX_UPLOAD_SIZE_BYTES:
+      process.env.STORAGE_MAX_UPLOAD_SIZE_BYTES ?? "26214400",
     WORKER_POLL_INTERVAL_MS: process.env.WORKER_POLL_INTERVAL_MS ?? "10",
     INGESTION_MAX_CHUNK_SIZE: process.env.INGESTION_MAX_CHUNK_SIZE ?? "1200",
     INGESTION_CHUNK_OVERLAP: process.env.INGESTION_CHUNK_OVERLAP ?? "200",
     INGESTION_QUERY_MATCH_LIMIT:
       process.env.INGESTION_QUERY_MATCH_LIMIT ?? "5",
+    AWS_S3_FORCE_PATH_STYLE: process.env.AWS_S3_FORCE_PATH_STYLE ?? "false",
     DEMO_USER_EMAIL: process.env.DEMO_USER_EMAIL ?? TEST_USER_EMAIL,
     DEMO_USER_PASSWORD: process.env.DEMO_USER_PASSWORD ?? TEST_USER_PASSWORD,
   });

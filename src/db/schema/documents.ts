@@ -16,11 +16,14 @@ import { DEFAULT_EMBEDDING_DIMENSION } from "@/lib/constants";
 import { users } from "@/db/schema/auth";
 
 export const documentStatusEnum = pgEnum("document_status", [
-  "pending",
+  "uploaded",
+  "queued",
   "processing",
-  "ready",
+  "processed",
   "failed",
 ]);
+
+export const storageBackendEnum = pgEnum("storage_backend", ["local", "s3"]);
 
 export const ingestionJobStatusEnum = pgEnum("ingestion_job_status", [
   "pending",
@@ -37,10 +40,13 @@ export const documents = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     title: varchar("title", { length: 255 }).notNull(),
-    status: documentStatusEnum("status").notNull().default("pending"),
-    sourceObjectKey: text("source_object_key").notNull(),
-    sourceMimeType: varchar("source_mime_type", { length: 255 }).notNull(),
-    sourceChecksum: varchar("source_checksum", { length: 128 }),
+    originalFilename: varchar("original_filename", { length: 255 }).notNull(),
+    status: documentStatusEnum("status").notNull().default("uploaded"),
+    storageBackend: storageBackendEnum("storage_backend").notNull().default("local"),
+    storageKey: text("storage_key").notNull(),
+    contentType: varchar("content_type", { length: 255 }).notNull(),
+    byteSize: integer("byte_size").notNull(),
+    checksum: varchar("checksum", { length: 128 }),
     metadata: jsonb("metadata").$type<Record<string, unknown>>().notNull().default({}),
     lastIngestedAt: timestamp("last_ingested_at", {
       mode: "date",
@@ -62,6 +68,7 @@ export const documents = pgTable(
   (table) => ({
     ownerIndex: index("documents_owner_id_idx").on(table.ownerId),
     statusIndex: index("documents_status_idx").on(table.status),
+    storageBackendIndex: index("documents_storage_backend_idx").on(table.storageBackend),
   }),
 );
 

@@ -1,5 +1,3 @@
-import "server-only";
-
 import type OpenAI from "openai";
 
 import { DEFAULT_EMBEDDING_DIMENSION } from "@/lib/constants";

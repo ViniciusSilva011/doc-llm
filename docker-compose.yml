@@ -16,29 +16,6 @@ services:
       timeout: 5s
       retries: 20
 
-  web:
-    build:
-      context: .
-      target: dev
-    depends_on:
-      db:
-        condition: service_healthy
-    env_file:
-      - .env
-    environment:
-      DATABASE_URL: postgres://postgres:postgres@db:5432/doc_llm
-      NEXTAUTH_URL: http://localhost:3000
-      APP_URL: http://localhost:3000
-      LOCAL_STORAGE_ROOT: /app/data/storage
-    ports:
-      - "3000:3000"
-    volumes:
-      - .:/app
-      - web_node_modules:/app/node_modules
-      - next_cache:/app/.next
-      - storage_data:/app/data/storage
-    command: ["npm", "run", "dev", "--", "--hostname", "0.0.0.0"]
-
   worker:
     build:
       context: .
@@ -50,12 +27,61 @@ services:
       - .env
     environment:
       DATABASE_URL: postgres://postgres:postgres@db:5432/doc_llm
-      LOCAL_STORAGE_ROOT: /app/data/storage
+      STORAGE_BACKEND: local
+      STORAGE_LOCAL_DIR: /app/data/uploads
     volumes:
       - .:/app
       - web_node_modules:/app/node_modules
-      - storage_data:/app/data/storage
+      - storage_data:/app/data/uploads
     command: ["npm", "run", "worker:dev"]
+
+  dev:
+    build:
+      context: .
+      target: dev
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/doc_llm
+      TEST_DATABASE_URL: postgres://postgres:postgres@db:5432/doc_llm_test
+      NEXTAUTH_URL: http://localhost:3000
+      APP_URL: http://localhost:3000
+      STORAGE_BACKEND: local
+      STORAGE_LOCAL_DIR: /app/data/uploads
+    ports:
+      - "3000:3000"
+    stdin_open: true
+    tty: true
+    volumes:
+      - .:/app
+      - web_node_modules:/app/node_modules
+      - next_cache:/app/.next
+      - storage_data:/app/data/uploads
+    command: ["npm", "run", "dev", "--", "--hostname", "0.0.0.0"]
+
+  prod:
+    build:
+      context: .
+      target: runner
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://postgres:postgres@db:5432/doc_llm
+      NEXTAUTH_URL: http://localhost:3001
+      APP_URL: http://localhost:3001
+      STORAGE_BACKEND: local
+      STORAGE_LOCAL_DIR: /app/data/uploads
+    ports:
+      - "3001:3000"
+    volumes:
+      - storage_data:/app/data/uploads
 
 volumes:
   next_cache:
