@@ -3,6 +3,17 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
 export function DocumentUploadForm() {
   const router = useRouter();
   const [title, setTitle] = useState("");
@@ -51,41 +62,47 @@ export function DocumentUploadForm() {
   }
 
   return (
-    <form className="stack-md surface" onSubmit={handleSubmit}>
-      <div className="stack-xs">
-        <label className="label" htmlFor="title">
-          Title
-        </label>
-        <input
-          id="title"
-          className="input"
-          type="text"
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
-          placeholder="Optional display title"
-        />
-      </div>
+    <Card className="border-border/70 bg-card shadow-xl backdrop-blur">
+      <CardHeader>
+        <CardTitle>Upload PDF</CardTitle>
+        <CardDescription>
+          Store a document, create the record, and queue ingestion in one step.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form className="space-y-5" onSubmit={handleSubmit}>
+          <div className="space-y-2">
+            <Label htmlFor="title">Title</Label>
+            <Input
+              id="title"
+              type="text"
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              placeholder="Optional display title"
+            />
+          </div>
 
-      <div className="stack-xs">
-        <label className="label" htmlFor="file">
-          PDF file
-        </label>
-        <input
-          id="file"
-          className="input"
-          type="file"
-          accept=".pdf,application/pdf"
-          onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-          required
-        />
-      </div>
+          <div className="space-y-2">
+            <Label htmlFor="file">PDF file</Label>
+            <Input
+              id="file"
+              type="file"
+              accept=".pdf,application/pdf"
+              onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+              required
+            />
+          </div>
 
-      {statusMessage ? <p className="muted-text">{statusMessage}</p> : null}
-      {errorMessage ? <p className="text-error">{errorMessage}</p> : null}
+          {statusMessage ? (
+            <p className="text-sm text-muted-foreground">{statusMessage}</p>
+          ) : null}
+          {errorMessage ? <p className="text-sm text-destructive">{errorMessage}</p> : null}
 
-      <button className="button" type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Uploading..." : "Upload PDF"}
-      </button>
-    </form>
+          <Button className="w-full" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Uploading..." : "Upload PDF"}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 }

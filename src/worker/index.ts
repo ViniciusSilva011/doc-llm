@@ -13,8 +13,6 @@ async function main(): Promise<void> {
     openAI: createOpenAIService(),
   });
 
-  console.info("Worker started.");
-
   while (true) {
     const job = await claimNextPendingJob();
 
@@ -23,11 +21,8 @@ async function main(): Promise<void> {
       continue;
     }
 
-    console.info(`Processing ingestion job ${job.id} for document ${job.documentId}`);
-
     try {
       const result = await processor.process(job);
-      console.info(`Completed job ${job.id} with ${result.chunkCount} chunks.`);
     } catch (error) {
       console.error(`Job ${job.id} failed.`, error);
     }

@@ -35,13 +35,6 @@ export async function uploadPdfDocument(params: {
     originalFilename: validatedFile.originalFilename,
   });
 
-  console.info("Uploading PDF document", {
-    ownerId: params.ownerId,
-    filename: validatedFile.originalFilename,
-    byteSize: validatedFile.byteSize,
-    backend: storage.backend,
-  });
-
   const storedObject = await storage.putObject({
     key: storageKey,
     body,
@@ -88,13 +81,6 @@ export async function uploadPdfDocument(params: {
       }
 
       return { document, job };
-    });
-
-    console.info("Queued uploaded PDF document", {
-      documentId: document.id,
-      ingestionJobId: job.id,
-      ownerId: params.ownerId,
-      storageBackend: storedObject.backend,
     });
 
     return {

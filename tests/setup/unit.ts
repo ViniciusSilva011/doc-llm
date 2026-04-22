@@ -8,5 +8,4 @@ vi.mock("server-only", () => ({}));
 
 afterEach(() => {
   vi.clearAllMocks();
-  vi.restoreAllMocks();
 });

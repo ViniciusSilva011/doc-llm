@@ -2,6 +2,16 @@
 
 import { FormEvent, useState } from "react";
 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+
 interface QueryResponse {
   answer: string;
   matches: Array<{
@@ -45,53 +55,56 @@ export function DocumentQueryForm() {
   }
 
   return (
-    <section className="surface stack-md">
-      <div className="stack-xs">
-        <h2>Query indexed content</h2>
-        <p className="muted-text">
-          This starter already routes queries through embeddings, pgvector search,
-          and a centralized OpenAI service.
-        </p>
-      </div>
+    <Card className="border-border/70 bg-card shadow-xl backdrop-blur">
+      <CardHeader>
+        <CardTitle>Query indexed content</CardTitle>
+        <CardDescription>
+          Ask a question and route it through embeddings, pgvector search, and the
+          shared OpenAI service layer.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          <Textarea
+            value={question}
+            onChange={(event) => setQuestion(event.target.value)}
+            placeholder="What are the main themes in the ingested documents?"
+            rows={4}
+            required
+          />
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Running query..." : "Ask"}
+          </Button>
+        </form>
 
-      <form className="stack-md" onSubmit={handleSubmit}>
-        <textarea
-          className="textarea"
-          value={question}
-          onChange={(event) => setQuestion(event.target.value)}
-          placeholder="What are the main themes in the ingested documents?"
-          rows={4}
-          required
-        />
-        <button className="button" type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Running query..." : "Ask"}
-        </button>
-      </form>
+        {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
-      {error ? <p className="text-error">{error}</p> : null}
+        {response ? (
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold">Answer</h3>
+              <p className="text-sm leading-7 text-foreground/95">{response.answer}</p>
+            </div>
 
-      {response ? (
-        <div className="stack-md">
-          <div className="stack-xs">
-            <h3>Answer</h3>
-            <p>{response.answer}</p>
+            <div className="space-y-3">
+              <h3 className="text-lg font-semibold">Matched chunks</h3>
+              <ul className="space-y-3">
+                {response.matches.map((match) => (
+                  <li
+                    className="rounded-xl border border-border/80 bg-muted/35 p-4"
+                    key={match.id}
+                  >
+                    <p className="text-sm text-muted-foreground">
+                      Document {match.documentId} | score {match.score.toFixed(3)}
+                    </p>
+                    <p className="mt-2 text-sm leading-7">{match.content}</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
-
-          <div className="stack-xs">
-            <h3>Matched chunks</h3>
-            <ul className="stack-sm list-reset">
-              {response.matches.map((match) => (
-                <li className="match-card" key={match.id}>
-                  <p className="muted-text">
-                    Document {match.documentId} | score {match.score.toFixed(3)}
-                  </p>
-                  <p>{match.content}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      ) : null}
-    </section>
+        ) : null}
+      </CardContent>
+    </Card>
   );
 }

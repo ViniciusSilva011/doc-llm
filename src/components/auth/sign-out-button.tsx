@@ -2,14 +2,12 @@
 
 import { signOut } from "next-auth/react";
 
+import { Button } from "@/components/ui/button";
+
 export function SignOutButton() {
   return (
-    <button
-      className="button button-secondary"
-      type="button"
-      onClick={() => signOut({ callbackUrl: "/" })}
-    >
+    <Button type="button" variant="outline" onClick={() => signOut({ callbackUrl: "/" })}>
       Sign out
-    </button>
+    </Button>
   );
 }

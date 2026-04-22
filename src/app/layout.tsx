@@ -15,10 +15,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body>
+    <html lang="en" className="dark" suppressHydrationWarning>
+      <body className="min-h-screen bg-background text-foreground">
         <AppHeader />
-        <main>{children}</main>
+        <main className="py-8 md:py-10">{children}</main>
       </body>
     </html>
   );

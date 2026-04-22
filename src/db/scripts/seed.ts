@@ -28,7 +28,6 @@ async function main(): Promise<void> {
       },
     });
 
-  console.info(`Seeded demo user ${env.DEMO_USER_EMAIL}`);
 }
 
 main().catch((error: unknown) => {

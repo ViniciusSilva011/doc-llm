@@ -171,7 +171,7 @@ docker compose exec dev sh
 ```
 
 The `dev` service runs `npm run dev` with bind mounts for live code changes and still works as
-your interactive workspace container.
+your interactive workspace container on [http://localhost:3100](http://localhost:3100).
 
 To run the production-style containerized app instead:
 
@@ -180,7 +180,7 @@ docker compose up -d prod
 ```
 
 The `prod` service builds the production image target and serves the standalone app on
-[http://localhost:3001](http://localhost:3001).
+[http://localhost:3000](http://localhost:3000).
 
 ### 4. Run the database setup
 
@@ -192,7 +192,7 @@ npm run db:seed
 ### 5. Start the web app
 
 ```bash
-npm run dev
+npm run dev -- --port 3100
 ```
 
 ### 6. Start the worker in another terminal
@@ -215,7 +215,10 @@ docker compose up -d prod
 
 ### 7. Open the app in your browser
 
-Open [http://localhost:3000](http://localhost:3000)
+Open [http://localhost:3100](http://localhost:3100) for the local dev server.
+
+If you are validating the production-style container instead, open
+[http://localhost:3000](http://localhost:3000).
 
 Use the seeded credentials from `.env`:
 
@@ -356,11 +359,15 @@ Requirements:
 - migrations and seed completed
 - Playwright browsers installed
 
+Playwright loads `.env` through `playwright.config.ts` and defaults to the running dev server on
+`http://127.0.0.1:3100`. If `APP_URL` or `NEXTAUTH_URL` are set in the shell, those values take
+precedence.
+
 Commands:
 
 ```bash
 npx playwright install
-npm run test:e2e
+npx playwright test
 ```
 
 Current e2e coverage includes:
@@ -368,6 +375,7 @@ Current e2e coverage includes:
 - sign-in flow
 - protected route redirect behavior
 - valid PDF upload through the documents page
+- uploading `public/ai_text_full_v2.pdf` with a custom title
 - invalid file upload validation in the UI
 
 ## Verification Status
