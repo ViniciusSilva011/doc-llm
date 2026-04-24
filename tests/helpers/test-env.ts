@@ -1,20 +1,54 @@
+import "dotenv/config";
+
 export const TEST_USER_EMAIL = "demo@example.com";
 export const TEST_USER_PASSWORD = "ChangeMe123!";
 
+function requireEnvValue(name: string, value: string | undefined) {
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+
+  return value;
+}
+
+export function getTestAppUrl() {
+  return requireEnvValue(
+    "APP_URL or NEXTAUTH_URL or PLAYWRIGHT_APP_URL",
+    process.env.APP_URL ?? process.env.NEXTAUTH_URL ?? process.env.PLAYWRIGHT_APP_URL,
+  );
+}
+
+export function getPlaywrightAppUrl() {
+  return requireEnvValue(
+    "PLAYWRIGHT_APP_URL or APP_URL or NEXTAUTH_URL",
+    process.env.PLAYWRIGHT_APP_URL ?? process.env.APP_URL ?? process.env.NEXTAUTH_URL,
+  );
+}
+
+export function getTestRequestUrl(pathname: string) {
+  const requestBaseUrl = requireEnvValue(
+    "TEST_REQUEST_BASE_URL or APP_URL or NEXTAUTH_URL",
+    process.env.TEST_REQUEST_BASE_URL ?? process.env.APP_URL ?? process.env.NEXTAUTH_URL,
+  );
+
+  return new URL(pathname, requestBaseUrl).toString();
+}
+
 export function applyTestEnv() {
+  const appUrl = getTestAppUrl();
+  const nextAuthUrl = process.env.NEXTAUTH_URL ?? appUrl;
+  const testDatabaseUrl = requireEnvValue(
+    "TEST_DATABASE_URL or DATABASE_URL",
+    process.env.TEST_DATABASE_URL ?? process.env.DATABASE_URL,
+  );
+
   Object.assign(process.env, {
     NODE_ENV: "test",
-    APP_URL: process.env.APP_URL ?? "http://127.0.0.1:3000",
-    DATABASE_URL:
-      process.env.TEST_DATABASE_URL ??
-      process.env.DATABASE_URL ??
-      "postgres://postgres:postgres@127.0.0.1:5432/doc_llm_test",
-    TEST_DATABASE_URL:
-      process.env.TEST_DATABASE_URL ??
-      process.env.DATABASE_URL ??
-      "postgres://postgres:postgres@127.0.0.1:5432/doc_llm_test",
+    APP_URL: process.env.APP_URL ?? appUrl,
+    DATABASE_URL: testDatabaseUrl,
+    TEST_DATABASE_URL: process.env.TEST_DATABASE_URL ?? testDatabaseUrl,
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET ?? "test-secret",
-    NEXTAUTH_URL: process.env.NEXTAUTH_URL ?? "http://127.0.0.1:3000",
+    NEXTAUTH_URL: nextAuthUrl,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY ?? "test-openai-key",
     OPENAI_GENERATION_MODEL:
       process.env.OPENAI_GENERATION_MODEL ?? "gpt-5-mini",

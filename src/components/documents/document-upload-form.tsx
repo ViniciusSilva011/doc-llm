@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import {
@@ -14,6 +14,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+const UPLOAD_SUCCESS_MESSAGE = "PDF uploaded and queued for ingestion.";
+const UPLOAD_FLASH_KEY = "document-upload-flash-message";
+
 export function DocumentUploadForm() {
   const router = useRouter();
   const [title, setTitle] = useState("");
@@ -22,11 +25,28 @@ export function DocumentUploadForm() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  useEffect(() => {
+    const flashMessage = window.sessionStorage.getItem(UPLOAD_FLASH_KEY);
+
+    if (!flashMessage) {
+      return;
+    }
+
+    setStatusMessage(flashMessage);
+    window.sessionStorage.removeItem(UPLOAD_FLASH_KEY);
+  }, []);
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (!file) {
       setErrorMessage("Select a PDF file before uploading.");
+      return;
+    }
+
+    if (!isPdfFile(file)) {
+      setStatusMessage(null);
+      setErrorMessage("Only PDF files are accepted.");
       return;
     }
 
@@ -57,7 +77,8 @@ export function DocumentUploadForm() {
 
     setTitle("");
     setFile(null);
-    setStatusMessage("PDF uploaded and queued for ingestion.");
+    setStatusMessage(UPLOAD_SUCCESS_MESSAGE);
+    window.sessionStorage.setItem(UPLOAD_FLASH_KEY, UPLOAD_SUCCESS_MESSAGE);
     router.refresh();
   }
 
@@ -105,4 +126,11 @@ export function DocumentUploadForm() {
       </CardContent>
     </Card>
   );
+}
+
+function isPdfFile(file: File) {
+  const hasPdfExtension = file.name.toLowerCase().endsWith(".pdf");
+  const hasAcceptedMimeType = file.type === "" || file.type === "application/pdf";
+
+  return hasPdfExtension && hasAcceptedMimeType;
 }

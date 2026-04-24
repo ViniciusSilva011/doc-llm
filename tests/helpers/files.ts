@@ -1,5 +1,16 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
+
+let samplePdfBuffer: Buffer | undefined;
+
 export function createPdfBuffer() {
-  return Buffer.from("%PDF-1.4\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF", "utf8");
+  if (!samplePdfBuffer) {
+    samplePdfBuffer = readFileSync(
+      path.resolve(process.cwd(), "public", "ai_text_full_v2.pdf"),
+    );
+  }
+
+  return Buffer.from(samplePdfBuffer);
 }
 
 export function createPdfFile(filename = "sample.pdf") {

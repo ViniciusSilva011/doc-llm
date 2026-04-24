@@ -3,6 +3,22 @@ import { count, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { ingestionJobs } from "@/db/schema";
 
+function mapClaimedJobRow(row: Record<string, unknown>) {
+  return {
+    id: row.id as string,
+    documentId: row.document_id as string,
+    createdByUserId: row.created_by_user_id as string,
+    status: row.status as typeof ingestionJobs.$inferSelect["status"],
+    attemptCount: row.attempt_count as number,
+    maxAttempts: row.max_attempts as number,
+    errorMessage: (row.error_message as string | null | undefined) ?? null,
+    startedAt: (row.started_at as Date | null | undefined) ?? null,
+    finishedAt: (row.finished_at as Date | null | undefined) ?? null,
+    createdAt: row.created_at as Date,
+    updatedAt: row.updated_at as Date,
+  } satisfies typeof ingestionJobs.$inferSelect;
+}
+
 export async function createIngestionJob(input: {
   documentId: string;
   createdByUserId: string;
@@ -41,7 +57,9 @@ export async function claimNextPendingJob() {
     returning *;
   `);
 
-  return (result.rows[0] as typeof ingestionJobs.$inferSelect | undefined) ?? null;
+  const row = result.rows[0] as Record<string, unknown> | undefined;
+
+  return row ? mapClaimedJobRow(row) : null;
 }
 
 export async function completeIngestionJob(jobId: string) {

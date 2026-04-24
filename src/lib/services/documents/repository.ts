@@ -72,6 +72,12 @@ export async function listDocumentsForUser(userId: string) {
 }
 
 export async function replaceDocumentChunks(documentId: string, chunks: TextChunk[], embeddings: number[][]) {
+  if (chunks.length !== embeddings.length) {
+    throw new Error(
+      `Chunk and embedding counts must match. Received ${chunks.length} chunks and ${embeddings.length} embeddings.`,
+    );
+  }
+
   await db.transaction(async (tx) => {
     await tx.delete(documentChunks).where(eq(documentChunks.documentId, documentId));
 
@@ -96,11 +102,13 @@ export async function updateDocumentStatus(input: {
   documentId: string;
   status: "uploaded" | "queued" | "processing" | "processed" | "failed";
   lastIngestedAt?: Date;
+  metadata?: Record<string, unknown>;
 }) {
   const updatePayload: {
     status: "uploaded" | "queued" | "processing" | "processed" | "failed";
     updatedAt: Date;
     lastIngestedAt?: Date;
+    metadata?: Record<string, unknown>;
   } = {
     status: input.status,
     updatedAt: new Date(),
@@ -108,6 +116,10 @@ export async function updateDocumentStatus(input: {
 
   if (input.lastIngestedAt) {
     updatePayload.lastIngestedAt = input.lastIngestedAt;
+  }
+
+  if (input.metadata) {
+    updatePayload.metadata = input.metadata;
   }
 
   const [document] = await db

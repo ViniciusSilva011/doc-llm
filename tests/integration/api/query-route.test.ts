@@ -3,6 +3,7 @@ import { vi } from "vitest";
 import { db } from "@/db/client";
 import { documents, users } from "@/db/schema";
 import { getSeededUser } from "../../helpers/db";
+import { getTestRequestUrl } from "../../helpers/test-env";
 
 const requireApiSessionMock = vi.hoisted(() => vi.fn());
 const generateAnswerFromDocumentsMock = vi.hoisted(() => vi.fn());
@@ -60,7 +61,7 @@ describe("POST /api/query", () => {
     }
 
     const response = await POST(
-      new Request("http://localhost/api/query", {
+      new Request(getTestRequestUrl("/api/query"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -110,7 +111,7 @@ describe("POST /api/query", () => {
     });
 
     const response = await POST(
-      new Request("http://localhost/api/query", {
+      new Request(getTestRequestUrl("/api/query"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

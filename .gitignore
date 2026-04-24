@@ -13,3 +13,4 @@ data/storage
 data/uploads
 .github
 .codex
+tsconfig.tsbuildinfo

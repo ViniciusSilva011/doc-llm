@@ -16,6 +16,8 @@ import {
   type ObjectStorageService,
 } from "@/server/storage";
 
+class NonRetryableIngestionError extends Error {}
+
 export class IngestionProcessor {
   constructor(
     private readonly dependencies: {
@@ -51,16 +53,42 @@ export class IngestionProcessor {
         contentType: document.contentType,
         objectKey: document.storageKey,
       });
-      const chunks = chunkText(extracted.text);
+      const extractedText = extracted.text.trim();
+
+      if (!extractedText) {
+        throw new NonRetryableIngestionError("No extractable text was found in the document.");
+      }
+
+      const chunks = chunkText(extractedText).map((chunk) => ({
+        ...chunk,
+        metadata: {
+          ...chunk.metadata,
+          ...extracted.metadata,
+        },
+      }));
       const embeddings = await this.dependencies.openAI.createEmbeddings(
         chunks.map((chunk) => chunk.content),
       );
+
+      if (embeddings.length !== chunks.length) {
+        throw new NonRetryableIngestionError(
+          `Expected ${chunks.length} embeddings but received ${embeddings.length}.`,
+        );
+      }
 
       await replaceDocumentChunks(document.id, chunks, embeddings);
       await updateDocumentStatus({
         documentId: document.id,
         status: "processed",
         lastIngestedAt: new Date(),
+        metadata: {
+          ...document.metadata,
+          ingestion: {
+            ...extracted.metadata,
+            chunkCount: chunks.length,
+            sourceContentType: document.contentType,
+          },
+        },
       });
       await completeIngestionJob(job.id);
 
@@ -70,7 +98,9 @@ export class IngestionProcessor {
         job.id,
         error instanceof Error ? error.message : "Unknown ingestion error",
         {
-          retryable: !(error instanceof StorageObjectNotFoundError),
+          retryable:
+            !(error instanceof StorageObjectNotFoundError) &&
+            !(error instanceof NonRetryableIngestionError),
         },
       );
 

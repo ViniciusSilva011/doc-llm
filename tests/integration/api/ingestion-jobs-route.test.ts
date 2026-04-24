@@ -4,6 +4,7 @@ import { vi } from "vitest";
 import { db } from "@/db/client";
 import { documents, ingestionJobs } from "@/db/schema";
 import { getSeededUser } from "../../helpers/db";
+import { getTestRequestUrl } from "../../helpers/test-env";
 
 const requireApiSessionMock = vi.hoisted(() => vi.fn());
 const storageFixture = vi.hoisted(() => ({
@@ -67,7 +68,7 @@ describe("POST /api/ingestion-jobs", () => {
     });
 
     const response = await POST(
-      new Request("http://localhost/api/ingestion-jobs", {
+      new Request(getTestRequestUrl("/api/ingestion-jobs"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -1,9 +1,17 @@
 import "dotenv/config";
 import { defineConfig, devices } from "@playwright/test";
 
-const defaultAppUrl = "http://127.0.0.1:3100";
-const appUrl = process.env.APP_URL ?? process.env.NEXTAUTH_URL ?? defaultAppUrl;
-const nextAuthUrl = process.env.NEXTAUTH_URL ?? appUrl;
+const appUrl =
+  process.env.PLAYWRIGHT_APP_URL ??
+  process.env.APP_URL ??
+  process.env.NEXTAUTH_URL;
+
+if (!appUrl) {
+  throw new Error(
+    "Set PLAYWRIGHT_APP_URL, APP_URL, or NEXTAUTH_URL in .env before running Playwright.",
+  );
+}
+
 const appPort = new URL(appUrl).port || "3100";
 const reuseExistingServer = process.env.PLAYWRIGHT_REUSE_SERVER !== "false";
 
@@ -22,7 +30,8 @@ export default defineConfig({
     env: {
       ...process.env,
       APP_URL: appUrl,
-      NEXTAUTH_URL: nextAuthUrl,
+      // Keep auth callbacks on the same host as the Playwright browser context.
+      NEXTAUTH_URL: appUrl,
       PLAYWRIGHT_REUSE_SERVER:
         process.env.PLAYWRIGHT_REUSE_SERVER ?? "true",
     },

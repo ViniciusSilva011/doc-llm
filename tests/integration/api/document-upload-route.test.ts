@@ -5,6 +5,7 @@ import { db } from "@/db/client";
 import { documents, ingestionJobs } from "@/db/schema";
 import { getSeededUser } from "../../helpers/db";
 import { createPdfFile, createTextFile } from "../../helpers/files";
+import { getTestRequestUrl } from "../../helpers/test-env";
 
 const requireApiSessionMock = vi.hoisted(() => vi.fn());
 const storageFixture = vi.hoisted(() => ({
@@ -65,7 +66,7 @@ describe("POST /api/documents/upload", () => {
     formData.append("file", createPdfFile());
 
     const response = await POST(
-      new Request("http://localhost/api/documents/upload", {
+      new Request(getTestRequestUrl("/api/documents/upload"), {
         method: "POST",
         body: formData,
       }),
@@ -89,7 +90,7 @@ describe("POST /api/documents/upload", () => {
     formData.append("file", createPdfFile("strategy-memo.pdf"));
 
     const response = await POST(
-      new Request("http://localhost/api/documents/upload", {
+      new Request(getTestRequestUrl("/api/documents/upload"), {
         method: "POST",
         body: formData,
       }),
@@ -138,7 +139,7 @@ describe("POST /api/documents/upload", () => {
     formData.append("file", createTextFile());
 
     const response = await POST(
-      new Request("http://localhost/api/documents/upload", {
+      new Request(getTestRequestUrl("/api/documents/upload"), {
         method: "POST",
         body: formData,
       }),
@@ -165,7 +166,7 @@ describe("POST /api/documents/upload", () => {
     formData.append("file", createPdfFile());
 
     const response = await POST(
-      new Request("http://localhost/api/documents/upload", {
+      new Request(getTestRequestUrl("/api/documents/upload"), {
         method: "POST",
         body: formData,
       }),
