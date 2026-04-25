@@ -32,8 +32,19 @@ export function DocumentUploadForm() {
       return;
     }
 
-    setStatusMessage(flashMessage);
+    let isMounted = true;
+
+    queueMicrotask(() => {
+      if (isMounted) {
+        setStatusMessage(flashMessage);
+      }
+    });
+
     window.sessionStorage.removeItem(UPLOAD_FLASH_KEY);
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {

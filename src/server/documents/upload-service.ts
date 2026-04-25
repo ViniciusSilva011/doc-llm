@@ -45,7 +45,7 @@ export async function uploadPdfDocument(params: {
 
   try {
     const title = params.title?.trim() || deriveTitleFromFilename(validatedFile.originalFilename);
-    const { document, job } = await db.transaction(async (tx) => {
+    const document = await db.transaction(async (tx) => {
       const [document] = await tx
         .insert(documents)
         .values({
@@ -80,7 +80,7 @@ export async function uploadPdfDocument(params: {
         throw new DocumentUploadProcessingError("The ingestion job could not be created.");
       }
 
-      return { document, job };
+      return document;
     });
 
     return {
