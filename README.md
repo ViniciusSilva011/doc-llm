@@ -9,7 +9,7 @@
 ![Integration Tests](https://img.shields.io/badge/npm%20run%20test%3Aintegration-passes-brightgreen?style=for-the-badge&logo=vitest&logoColor=white)
 ![E2E Tests](https://img.shields.io/badge/npm%20run%20test%3Ae2e-passes-brightgreen?style=for-the-badge&logo=playwright&logoColor=white)
 
-# What This App Is About
+# The App
 
 Note: `This is not the finished product yet.`
 
@@ -23,51 +23,6 @@ Today, it gives you:
 - pgvector-backed chunk storage for semantic retrieval
 - a single OpenAI service layer for embeddings and text generation
 
-
-Production-oriented SaaS starter built on:
-
-- Next.js App Router
-- TypeScript with strict settings
-- Auth.js / NextAuth credentials flow
-- PostgreSQL + pgvector
-- Pluggable object storage abstraction (local by default, optional S3)
-- Standalone background ingestion worker
-- Centralized OpenAI text + embeddings service
-- Vitest + Playwright testing foundation
-
-# Key Decisions
-
-## Auth
-
-- Uses NextAuth credentials sign-in today.
-- Keeps provider creation isolated in `src/auth/providers.ts` so OAuth can be added without rewriting route guards.
-- Uses JWT sessions for a lean starter while keeping `accounts`, `sessions`, and `verification_tokens` tables ready for future expansion.
-
-## Database
-
-- Uses Drizzle ORM with SQL migrations committed to the repo.
-- Enables `pgcrypto` and `vector` in the initial migration.
-- Stores embeddings in `document_chunks.embedding`.
-- Includes a dedicated `doc_llm_test` database path for integration tests.
-
-## Storage
-
-- Business logic depends on a small `ObjectStorageService` interface, not on filesystem paths or the AWS SDK.
-- `LocalObjectStorageService` stores files under `STORAGE_LOCAL_DIR` and is the default backend.
-- `S3ObjectStorageService` uses AWS SDK v3 and is selected only through env configuration.
-- The upload route and ingestion worker use the same storage entrypoint, so calling code does not change between local and S3 mode.
-
-## Ingestion
-
-- The web app validates uploads, persists PDF bytes, creates jobs, and returns quickly.
-- The worker polls pending jobs, fetches source objects through the storage abstraction, extracts text, chunks content, embeds chunks, writes results, and updates status.
-- PDF extraction is now wired in for the upload flow, while richer format support can be added behind the same worker pipeline.
-
-## OpenAI
-
-- All OpenAI calls live under `src/lib/services/openai`.
-- Embeddings and generation models are configurable through environment variables.
-- The query route already exercises retrieval plus generation through one centralized service layer.
 
 # How To Load Up The App
 
