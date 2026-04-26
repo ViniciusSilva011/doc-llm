@@ -13,7 +13,7 @@ export class OpenAIService {
     }
 
     const response = await this.client.embeddings.create({
-      model: env.OPENAI_EMBEDDING_MODEL,
+      model: env.EMBEDDING_MODEL,
       input,
     });
 

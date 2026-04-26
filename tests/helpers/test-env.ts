@@ -52,8 +52,8 @@ export function applyTestEnv() {
     OPENAI_API_KEY: process.env.OPENAI_API_KEY ?? "test-openai-key",
     OPENAI_GENERATION_MODEL:
       process.env.OPENAI_GENERATION_MODEL ?? "gpt-5-mini",
-    OPENAI_EMBEDDING_MODEL:
-      process.env.OPENAI_EMBEDDING_MODEL ?? "text-embedding-3-small",
+    EMBEDDING_MODEL:
+      process.env.EMBEDDING_MODEL ?? "text-embedding-3-small",
     EMBEDDING_DIMENSION: process.env.EMBEDDING_DIMENSION ?? "1536",
     STORAGE_BACKEND:
       process.env.STORAGE_BACKEND ?? process.env.OBJECT_STORAGE_DRIVER ?? "local",
