@@ -70,7 +70,12 @@ const envSchema = z.object({
   AWS_S3_PREFIX: optionalEnvString(z.string()),
   WORKER_POLL_INTERVAL_MS: z.coerce.number().int().positive().default(5000),
   INGESTION_MAX_CHUNK_SIZE: z.coerce.number().int().positive().default(1200),
-  INGESTION_CHUNK_OVERLAP: z.coerce.number().int().min(0).default(200),
+  INGESTION_CHUNK_OVERLAP_PERCENT: z.coerce
+    .number()
+    .int()
+    .min(0)
+    .max(90)
+    .default(20),
   INGESTION_QUERY_MATCH_LIMIT: z.coerce
     .number()
     .int()
