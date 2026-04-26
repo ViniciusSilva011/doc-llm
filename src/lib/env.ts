@@ -10,6 +10,12 @@ const booleanStringSchema = z
   .union([z.literal("true"), z.literal("false"), z.boolean()])
   .transform((value) => value === true || value === "true");
 
+const optionalEnvString = <T extends z.ZodTypeAny>(schema: T) =>
+  z.preprocess(
+    (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
+    schema.optional(),
+  );
+
 const rawEnv = {
   ...process.env,
   STORAGE_BACKEND:
@@ -30,6 +36,7 @@ const envSchema = z.object({
   NEXTAUTH_SECRET: z.string().min(1),
   NEXTAUTH_URL: z.string().url(),
   OPENAI_API_KEY: z.string().min(1),
+  OPENAI_BASE_URL: optionalEnvString(z.string().url()),
   OPENAI_GENERATION_MODEL: z.string().min(1),
   OPENAI_EMBEDDING_MODEL: z.string().min(1),
   EMBEDDING_DIMENSION: z.coerce
@@ -46,13 +53,13 @@ const envSchema = z.object({
     .int()
     .positive()
     .default(DEFAULT_MAX_UPLOAD_SIZE_BYTES),
-  AWS_REGION: z.string().min(1).optional(),
-  AWS_S3_BUCKET: z.string().min(1).optional(),
-  AWS_ACCESS_KEY_ID: z.string().min(1).optional(),
-  AWS_SECRET_ACCESS_KEY: z.string().min(1).optional(),
-  AWS_S3_ENDPOINT: z.string().url().optional(),
+  AWS_REGION: optionalEnvString(z.string().min(1)),
+  AWS_S3_BUCKET: optionalEnvString(z.string().min(1)),
+  AWS_ACCESS_KEY_ID: optionalEnvString(z.string().min(1)),
+  AWS_SECRET_ACCESS_KEY: optionalEnvString(z.string().min(1)),
+  AWS_S3_ENDPOINT: optionalEnvString(z.string().url()),
   AWS_S3_FORCE_PATH_STYLE: booleanStringSchema.optional().default(false),
-  AWS_S3_PREFIX: z.string().optional(),
+  AWS_S3_PREFIX: optionalEnvString(z.string()),
   WORKER_POLL_INTERVAL_MS: z.coerce.number().int().positive().default(5000),
   INGESTION_MAX_CHUNK_SIZE: z.coerce.number().int().positive().default(1200),
   INGESTION_CHUNK_OVERLAP: z.coerce.number().int().min(0).default(200),

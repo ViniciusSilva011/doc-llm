@@ -2,9 +2,19 @@ import { Readable } from "node:stream";
 
 import { vi } from "vitest";
 
-import { S3ObjectStorageService, StorageObjectNotFoundError } from "@/server/storage";
+import { StorageObjectNotFoundError } from "@/server/storage/errors";
+import { S3ObjectStorageService } from "@/server/storage/s3-storage-service";
 
-describe("S3ObjectStorageService", () => {
+const requiredAwsEnvNames = [
+  "AWS_REGION",
+  "AWS_S3_BUCKET",
+  "AWS_ACCESS_KEY_ID",
+  "AWS_SECRET_ACCESS_KEY",
+] as const;
+const hasRequiredAwsEnv = requiredAwsEnvNames.every((name) => process.env[name]?.trim());
+const describeAws = hasRequiredAwsEnv ? describe : describe.skip;
+
+describeAws("S3ObjectStorageService", () => {
   it("stores objects with the expected bucket, key, and content type", async () => {
     const send = vi.fn().mockResolvedValue({});
     const service = new S3ObjectStorageService(

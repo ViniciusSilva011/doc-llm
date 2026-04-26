@@ -1,7 +1,7 @@
 ![Next.js 16](https://img.shields.io/badge/Next.js-16-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 ![S3 Compatible](https://img.shields.io/badge/S3--Compatible-569A31?style=for-the-badge&logo=amazons3&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 
 ![Lint](https://img.shields.io/badge/npm%20run%20lint-passes-brightgreen?style=for-the-badge&logo=eslint&logoColor=white)
 ![Typecheck](https://img.shields.io/badge/npm%20run%20typecheck-passes-brightgreen?style=for-the-badge&logo=typescript&logoColor=white)
