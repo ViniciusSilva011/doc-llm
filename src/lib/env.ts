@@ -12,7 +12,8 @@ const booleanStringSchema = z
 
 const optionalEnvString = <T extends z.ZodTypeAny>(schema: T) =>
   z.preprocess(
-    (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
+    (value) =>
+      typeof value === "string" && value.trim() === "" ? undefined : value,
     schema.optional(),
   );
 
@@ -21,7 +22,9 @@ const rawEnv = {
   STORAGE_BACKEND:
     process.env.STORAGE_BACKEND ?? process.env.OBJECT_STORAGE_DRIVER ?? "local",
   STORAGE_LOCAL_DIR:
-    process.env.STORAGE_LOCAL_DIR ?? process.env.LOCAL_STORAGE_ROOT ?? "./data/uploads",
+    process.env.STORAGE_LOCAL_DIR ??
+    process.env.LOCAL_STORAGE_ROOT ??
+    "./data/uploads",
   STORAGE_MAX_UPLOAD_SIZE_BYTES:
     process.env.STORAGE_MAX_UPLOAD_SIZE_BYTES ??
     process.env.UPLOAD_MAX_FILE_SIZE_BYTES ??
@@ -29,7 +32,9 @@ const rawEnv = {
 };
 
 const envSchema = z.object({
-  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+  NODE_ENV: z
+    .enum(["development", "test", "production"])
+    .default("development"),
   APP_URL: z.string().url(),
   DATABASE_URL: z.string().min(1),
   TEST_DATABASE_URL: z.string().min(1).optional(),
@@ -38,11 +43,14 @@ const envSchema = z.object({
   OPENAI_API_KEY: z.string().min(1),
   OPENAI_BASE_URL: optionalEnvString(z.string().url()),
   OPENAI_GENERATION_MODEL: z.string().min(1),
-  EMBEDDING_MODEL: z.string().min(1),
+  EMBEDDING_API_KEY: z.string().min(1).default("ollama"),
+  EMBEDDING_BASE_URL: z.string().url().default("http://127.0.0.1:11434/v1"),
+  EMBEDDING_MODEL: z.string().min(1).default("nomic-embed-text"),
   EMBEDDING_DIMENSION: z.coerce
     .number()
     .int()
     .positive()
+    .default(DEFAULT_EMBEDDING_DIMENSION)
     .refine((value) => value === DEFAULT_EMBEDDING_DIMENSION, {
       message: `This starter expects ${DEFAULT_EMBEDDING_DIMENSION}-dimension embeddings. Update the schema and migrations before changing it.`,
     }),

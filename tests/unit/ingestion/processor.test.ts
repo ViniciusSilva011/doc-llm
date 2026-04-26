@@ -1,5 +1,7 @@
 import { vi } from "vitest";
 
+import { DEFAULT_EMBEDDING_DIMENSION } from "@/lib/constants";
+
 const mocks = vi.hoisted(() => ({
   getDocumentById: vi.fn(),
   replaceDocumentChunks: vi.fn(),
@@ -44,7 +46,9 @@ describe("IngestionProcessor", () => {
       backend: "local" as const,
       putObject: vi.fn(),
       getObjectStream: vi.fn(),
-      getObjectBuffer: vi.fn().mockResolvedValue(Buffer.from("pdf-bytes", "utf8")),
+      getObjectBuffer: vi
+        .fn()
+        .mockResolvedValue(Buffer.from("pdf-bytes", "utf8")),
       deleteObject: vi.fn(),
       exists: vi.fn(),
       getPublicUrl: vi.fn(),
@@ -60,7 +64,11 @@ describe("IngestionProcessor", () => {
       }),
     };
     const openAI = {
-      createEmbeddings: vi.fn().mockResolvedValue([Array.from({ length: 1536 }, () => 0.1)]),
+      createEmbeddings: vi
+        .fn()
+        .mockResolvedValue([
+          Array.from({ length: DEFAULT_EMBEDDING_DIMENSION }, () => 0.1),
+        ]),
     };
 
     const processor = new IngestionProcessor({
@@ -76,7 +84,9 @@ describe("IngestionProcessor", () => {
       }),
     ).resolves.toEqual({ chunkCount: 1 });
 
-    expect(storage.getObjectBuffer).toHaveBeenCalledWith("documents/user-1/file.pdf");
+    expect(storage.getObjectBuffer).toHaveBeenCalledWith(
+      "documents/user-1/file.pdf",
+    );
     expect(extractor.extract).toHaveBeenCalledWith({
       body: Buffer.from("pdf-bytes", "utf8"),
       contentType: "application/pdf",
@@ -95,7 +105,7 @@ describe("IngestionProcessor", () => {
           }),
         }),
       ],
-      [Array.from({ length: 1536 }, () => 0.1)],
+      [Array.from({ length: DEFAULT_EMBEDDING_DIMENSION }, () => 0.1)],
     );
     expect(mocks.updateDocumentStatus).toHaveBeenNthCalledWith(1, {
       documentId: "doc-1",
@@ -171,7 +181,9 @@ describe("IngestionProcessor", () => {
         backend: "local",
         putObject: vi.fn(),
         getObjectStream: vi.fn(),
-        getObjectBuffer: vi.fn().mockResolvedValue(Buffer.from("pdf-bytes", "utf8")),
+        getObjectBuffer: vi
+          .fn()
+          .mockResolvedValue(Buffer.from("pdf-bytes", "utf8")),
         deleteObject: vi.fn(),
         exists: vi.fn(),
         getPublicUrl: vi.fn(),
@@ -223,7 +235,9 @@ describe("IngestionProcessor", () => {
         backend: "local",
         putObject: vi.fn(),
         getObjectStream: vi.fn(),
-        getObjectBuffer: vi.fn().mockResolvedValue(Buffer.from("pdf-bytes", "utf8")),
+        getObjectBuffer: vi
+          .fn()
+          .mockResolvedValue(Buffer.from("pdf-bytes", "utf8")),
         deleteObject: vi.fn(),
         exists: vi.fn(),
         getPublicUrl: vi.fn(),

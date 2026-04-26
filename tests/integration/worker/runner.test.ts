@@ -4,9 +4,13 @@ import { vi } from "vitest";
 import { db } from "@/db/client";
 import { documentChunks, documents, ingestionJobs } from "@/db/schema";
 import { createDocument } from "@/lib/services/documents/repository";
-import { createIngestionJob, claimNextPendingJob } from "@/lib/services/ingestion/jobs";
+import {
+  createIngestionJob,
+  claimNextPendingJob,
+} from "@/lib/services/ingestion/jobs";
 import { TextExtractionService } from "@/lib/services/ingestion/extractor";
 import { IngestionProcessor } from "@/lib/services/ingestion/processor";
+import { DEFAULT_EMBEDDING_DIMENSION } from "@/lib/constants";
 import { runWorkerIteration } from "@/worker/runner";
 import { getSeededUser } from "../../helpers/db";
 import { createPdfBuffer } from "../../helpers/files";
@@ -32,16 +36,20 @@ describe("runWorkerIteration", () => {
       extractor: new TextExtractionService(),
       openAI: {
         createEmbeddings: vi.fn(async (input: string[]) =>
-          input.map(() => Array.from({ length: 1536 }, () => 0.1)),
+          input.map(() =>
+            Array.from({ length: DEFAULT_EMBEDDING_DIMENSION }, () => 0.1),
+          ),
         ),
       } as never,
       storage: {
         backend: "local",
         putObject: vi.fn(),
         getObjectStream: vi.fn(),
-        getObjectBuffer: vi.fn().mockResolvedValue(
-          Buffer.from("queued worker content for ingestion", "utf8"),
-        ),
+        getObjectBuffer: vi
+          .fn()
+          .mockResolvedValue(
+            Buffer.from("queued worker content for ingestion", "utf8"),
+          ),
         deleteObject: vi.fn(),
         exists: vi.fn(),
         getPublicUrl: vi.fn(),
@@ -118,7 +126,9 @@ describe("runWorkerIteration", () => {
       extractor: new TextExtractionService(),
       openAI: {
         createEmbeddings: vi.fn(async (input: string[]) =>
-          input.map(() => Array.from({ length: 1536 }, () => 0.1)),
+          input.map(() =>
+            Array.from({ length: DEFAULT_EMBEDDING_DIMENSION }, () => 0.1),
+          ),
         ),
       } as never,
       storage: {

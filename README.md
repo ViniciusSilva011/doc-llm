@@ -21,8 +21,7 @@ Today, it gives you:
 - PDF upload with authenticated route handling and storage-backed document records
 - a background worker that processes pending ingestion jobs
 - pgvector-backed chunk storage for semantic retrieval
-- a single OpenAI service layer for embeddings and text generation
-
+- an OpenAI-compatible service layer using Ollama embeddings and OpenAI text generation
 
 # How To Load Up The App
 
@@ -36,6 +35,13 @@ npm install
 
 ```bash
 cp .env.example .env
+```
+
+Embeddings default to Ollama's OpenAI-compatible endpoint. Before running the worker, make sure
+Ollama is running locally and the model is available:
+
+```bash
+ollama pull nomic-embed-text
 ```
 
 ## 3. Start PostgreSQL with pgvector
@@ -85,7 +91,7 @@ npm run dev -- --port 3100
 ## 6. Start the worker in another terminal
 
 ```bash
-npm run worker:dev
+npm run worker
 ```
 
 If you are using Docker Compose for local development instead, you can skip steps 5 and 6 and run:
@@ -111,7 +117,6 @@ Use the seeded credentials from `.env`:
 
 - Email: `DEMO_USER_EMAIL`
 - Password: `DEMO_USER_PASSWORD`
-
 
 ## Fast checks
 

@@ -2,17 +2,25 @@ import type OpenAI from "openai";
 
 import { DEFAULT_EMBEDDING_DIMENSION } from "@/lib/constants";
 import { env } from "@/lib/env";
-import { createOpenAIClient } from "@/lib/services/openai/client";
+import {
+  createEmbeddingClient,
+  createOpenAIClient,
+} from "@/lib/services/openai/client";
+
+type OpenAIServiceClients = {
+  embedding: Pick<OpenAI, "embeddings">;
+  generation: Pick<OpenAI, "responses">;
+};
 
 export class OpenAIService {
-  constructor(private readonly client: OpenAI) {}
+  constructor(private readonly clients: OpenAIServiceClients) {}
 
   async createEmbeddings(input: string[]): Promise<number[][]> {
     if (input.length === 0) {
       return [];
     }
 
-    const response = await this.client.embeddings.create({
+    const response = await this.clients.embedding.embeddings.create({
       model: env.EMBEDDING_MODEL,
       input,
     });
@@ -45,7 +53,7 @@ export class OpenAIService {
       request.instructions = params.instructions;
     }
 
-    const response = await this.client.responses.create(request);
+    const response = await this.clients.generation.responses.create(request);
 
     return response.output_text.trim();
   }
@@ -55,7 +63,10 @@ let openAIService: OpenAIService | undefined;
 
 export function createOpenAIService(): OpenAIService {
   if (!openAIService) {
-    openAIService = new OpenAIService(createOpenAIClient());
+    openAIService = new OpenAIService({
+      embedding: createEmbeddingClient(),
+      generation: createOpenAIClient(),
+    });
   }
 
   return openAIService;

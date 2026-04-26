@@ -14,21 +14,27 @@ function requireEnvValue(name: string, value: string | undefined) {
 export function getTestAppUrl() {
   return requireEnvValue(
     "APP_URL or NEXTAUTH_URL or PLAYWRIGHT_APP_URL",
-    process.env.APP_URL ?? process.env.NEXTAUTH_URL ?? process.env.PLAYWRIGHT_APP_URL,
+    process.env.APP_URL ??
+      process.env.NEXTAUTH_URL ??
+      process.env.PLAYWRIGHT_APP_URL,
   );
 }
 
 export function getPlaywrightAppUrl() {
   return requireEnvValue(
     "PLAYWRIGHT_APP_URL or APP_URL or NEXTAUTH_URL",
-    process.env.PLAYWRIGHT_APP_URL ?? process.env.APP_URL ?? process.env.NEXTAUTH_URL,
+    process.env.PLAYWRIGHT_APP_URL ??
+      process.env.APP_URL ??
+      process.env.NEXTAUTH_URL,
   );
 }
 
 export function getTestRequestUrl(pathname: string) {
   const requestBaseUrl = requireEnvValue(
     "TEST_REQUEST_BASE_URL or APP_URL or NEXTAUTH_URL",
-    process.env.TEST_REQUEST_BASE_URL ?? process.env.APP_URL ?? process.env.NEXTAUTH_URL,
+    process.env.TEST_REQUEST_BASE_URL ??
+      process.env.APP_URL ??
+      process.env.NEXTAUTH_URL,
   );
 
   return new URL(pathname, requestBaseUrl).toString();
@@ -52,20 +58,25 @@ export function applyTestEnv() {
     OPENAI_API_KEY: process.env.OPENAI_API_KEY ?? "test-openai-key",
     OPENAI_GENERATION_MODEL:
       process.env.OPENAI_GENERATION_MODEL ?? "gpt-5-mini",
-    EMBEDDING_MODEL:
-      process.env.EMBEDDING_MODEL ?? "text-embedding-3-small",
-    EMBEDDING_DIMENSION: process.env.EMBEDDING_DIMENSION ?? "1536",
+    EMBEDDING_API_KEY: process.env.EMBEDDING_API_KEY ?? "ollama",
+    EMBEDDING_BASE_URL:
+      process.env.EMBEDDING_BASE_URL ?? "http://127.0.0.1:11434/v1",
+    EMBEDDING_MODEL: process.env.EMBEDDING_MODEL ?? "nomic-embed-text",
+    EMBEDDING_DIMENSION: process.env.EMBEDDING_DIMENSION ?? "768",
     STORAGE_BACKEND:
-      process.env.STORAGE_BACKEND ?? process.env.OBJECT_STORAGE_DRIVER ?? "local",
+      process.env.STORAGE_BACKEND ??
+      process.env.OBJECT_STORAGE_DRIVER ??
+      "local",
     STORAGE_LOCAL_DIR:
-      process.env.STORAGE_LOCAL_DIR ?? process.env.LOCAL_STORAGE_ROOT ?? "./data/uploads",
+      process.env.STORAGE_LOCAL_DIR ??
+      process.env.LOCAL_STORAGE_ROOT ??
+      "./data/uploads",
     STORAGE_MAX_UPLOAD_SIZE_BYTES:
       process.env.STORAGE_MAX_UPLOAD_SIZE_BYTES ?? "26214400",
     WORKER_POLL_INTERVAL_MS: process.env.WORKER_POLL_INTERVAL_MS ?? "10",
     INGESTION_MAX_CHUNK_SIZE: process.env.INGESTION_MAX_CHUNK_SIZE ?? "1200",
     INGESTION_CHUNK_OVERLAP: process.env.INGESTION_CHUNK_OVERLAP ?? "200",
-    INGESTION_QUERY_MATCH_LIMIT:
-      process.env.INGESTION_QUERY_MATCH_LIMIT ?? "5",
+    INGESTION_QUERY_MATCH_LIMIT: process.env.INGESTION_QUERY_MATCH_LIMIT ?? "5",
     AWS_S3_FORCE_PATH_STYLE: process.env.AWS_S3_FORCE_PATH_STYLE ?? "false",
     DEMO_USER_EMAIL: process.env.DEMO_USER_EMAIL ?? TEST_USER_EMAIL,
     DEMO_USER_PASSWORD: process.env.DEMO_USER_PASSWORD ?? TEST_USER_PASSWORD,
