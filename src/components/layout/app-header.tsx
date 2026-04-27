@@ -16,14 +16,14 @@ export async function AppHeader() {
           href="/"
         >
           <Image
-            src="/app-icon.png"
+            src="/newimage.png"
             alt=""
             width={32}
             height={32}
             className="size-8 rounded-lg"
             priority
           />
-          Doc LLM Starter
+          DocWise
         </Link>
 
         <nav className="flex items-center gap-4 text-sm text-muted-foreground">
