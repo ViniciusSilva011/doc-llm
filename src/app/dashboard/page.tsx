@@ -1,6 +1,5 @@
 import { requirePageSession } from "@/auth/session";
 import { DocumentTableRow } from "@/components/documents/document-table-row";
-import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -25,20 +24,17 @@ export default async function DashboardPage() {
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4">
       <section className="space-y-4">
-        <Badge>Protected dashboard</Badge>
         <h1 className="text-4xl font-semibold tracking-tight">
           Welcome back, {session.user.name ?? session.user.email}.
         </h1>
-        <p className="max-w-3xl text-base text-muted-foreground">
-          The dashboard is protected via server-side session checks and uses shared
-          services instead of page-local database calls.
-        </p>
       </section>
 
       <section className="grid gap-4 md:grid-cols-3">
         <Card className="border-border/70 bg-card backdrop-blur">
           <CardHeader className="pb-3">
-            <CardTitle className="text-3xl">{dashboard.stats.documentCount}</CardTitle>
+            <CardTitle className="text-3xl">
+              {dashboard.stats.documentCount}
+            </CardTitle>
             <CardDescription>Documents tracked</CardDescription>
           </CardHeader>
         </Card>
@@ -52,7 +48,9 @@ export default async function DashboardPage() {
         </Card>
         <Card className="border-border/70 bg-card backdrop-blur">
           <CardHeader className="pb-3">
-            <CardTitle className="text-3xl">{dashboard.stats.ingestionJobCount}</CardTitle>
+            <CardTitle className="text-3xl">
+              {dashboard.stats.ingestionJobCount}
+            </CardTitle>
             <CardDescription>Ingestion jobs created</CardDescription>
           </CardHeader>
         </Card>
@@ -63,7 +61,8 @@ export default async function DashboardPage() {
           <CardHeader>
             <CardTitle>Tracked documents</CardTitle>
             <CardDescription>
-              Recent uploads with their current ingestion status and chat actions.
+              Recent uploads with their current ingestion status and chat
+              actions.
             </CardDescription>
           </CardHeader>
           <CardContent>
