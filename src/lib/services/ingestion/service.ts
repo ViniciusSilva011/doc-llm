@@ -9,7 +9,7 @@ import {
 import type { CreateIngestionJobInput } from "@/lib/validations/ingestion";
 
 export async function enqueueIngestionJob(
-  userId: string,
+  userId: number,
   input: CreateIngestionJobInput,
 ) {
   const storage = getObjectStorageService();

@@ -7,9 +7,9 @@ import { createOpenAIService } from "@/lib/services/openai/service";
 import type { QueryResultChunk } from "@/types/ingestion";
 
 export async function queryDocumentChunks(input: {
-  userId: string;
+  userId: number;
   question: string;
-  documentIds?: string[];
+  documentIds?: number[];
 }): Promise<QueryResultChunk[]> {
   const openAI = createOpenAIService();
   const [embedding] = await openAI.createEmbeddings([input.question]);
@@ -44,9 +44,9 @@ export async function queryDocumentChunks(input: {
 }
 
 export async function generateAnswerFromDocuments(input: {
-  userId: string;
+  userId: number;
   question: string;
-  documentIds?: string[];
+  documentIds?: number[];
 }) {
   const matches = await queryDocumentChunks(input);
 

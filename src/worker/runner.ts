@@ -1,6 +1,6 @@
 export interface WorkerJob {
-  id: string;
-  documentId: string;
+  id: number;
+  documentId: number;
 }
 
 export interface WorkerProcessor {
@@ -23,8 +23,8 @@ export async function runWorkerIteration(
   dependencies: WorkerDependencies,
 ): Promise<
   | { status: "idle" }
-  | { status: "processed"; jobId: string }
-  | { status: "failed"; jobId: string; error: unknown }
+  | { status: "processed"; jobId: number }
+  | { status: "failed"; jobId: number; error: unknown }
 > {
   const job = await dependencies.claimNextPendingJob();
 

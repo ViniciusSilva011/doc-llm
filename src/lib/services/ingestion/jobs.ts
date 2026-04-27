@@ -5,9 +5,9 @@ import { ingestionJobs } from "@/db/schema";
 
 function mapClaimedJobRow(row: Record<string, unknown>) {
   return {
-    id: row.id as string,
-    documentId: row.document_id as string,
-    createdByUserId: row.created_by_user_id as string,
+    id: row.id as number,
+    documentId: row.document_id as number,
+    createdByUserId: row.created_by_user_id as number,
     status: row.status as typeof ingestionJobs.$inferSelect["status"],
     attemptCount: row.attempt_count as number,
     maxAttempts: row.max_attempts as number,
@@ -20,8 +20,8 @@ function mapClaimedJobRow(row: Record<string, unknown>) {
 }
 
 export async function createIngestionJob(input: {
-  documentId: string;
-  createdByUserId: string;
+  documentId: number;
+  createdByUserId: number;
 }) {
   const [job] = await db
     .insert(ingestionJobs)
@@ -62,7 +62,7 @@ export async function claimNextPendingJob() {
   return row ? mapClaimedJobRow(row) : null;
 }
 
-export async function completeIngestionJob(jobId: string) {
+export async function completeIngestionJob(jobId: number) {
   const [job] = await db
     .update(ingestionJobs)
     .set({
@@ -78,7 +78,7 @@ export async function completeIngestionJob(jobId: string) {
 }
 
 export async function failIngestionJob(
-  jobId: string,
+  jobId: number,
   errorMessage: string,
   options?: {
     retryable?: boolean;
@@ -121,7 +121,7 @@ export async function failIngestionJob(
   };
 }
 
-export async function listRecentJobsForUser(userId: string) {
+export async function listRecentJobsForUser(userId: number) {
   return db
     .select()
     .from(ingestionJobs)

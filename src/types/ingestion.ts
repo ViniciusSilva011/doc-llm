@@ -6,8 +6,8 @@ export interface TextChunk {
 }
 
 export interface QueryResultChunk {
-  id: string;
-  documentId: string;
+  id: number;
+  documentId: number;
   content: string;
   score: number;
 }

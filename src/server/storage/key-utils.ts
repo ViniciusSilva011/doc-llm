@@ -27,7 +27,7 @@ export function sanitizeFilename(input: string): string {
 }
 
 export function createDocumentStorageKey(input: {
-  ownerId: string;
+  ownerId: number;
   originalFilename: string;
   now?: Date;
   id?: string;

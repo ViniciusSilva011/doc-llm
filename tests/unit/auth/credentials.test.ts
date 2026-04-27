@@ -30,7 +30,7 @@ describe("authorizeWithPassword", () => {
   it("returns the user when the password matches", async () => {
     mocks.limit.mockResolvedValue([
       {
-        id: "user-1",
+        id: 1,
         email: "demo@example.com",
         name: "Demo User",
         passwordHash: "hashed-password",
@@ -42,7 +42,7 @@ describe("authorizeWithPassword", () => {
     const user = await authorizeWithPassword("demo@example.com", "secret");
 
     expect(user).toEqual({
-      id: "user-1",
+      id: "1",
       email: "demo@example.com",
       name: "Demo User",
       role: "admin",
@@ -52,7 +52,7 @@ describe("authorizeWithPassword", () => {
   it("returns null when no password hash exists", async () => {
     mocks.limit.mockResolvedValue([
       {
-        id: "user-1",
+        id: 1,
         email: "demo@example.com",
         name: "Demo User",
         passwordHash: null,

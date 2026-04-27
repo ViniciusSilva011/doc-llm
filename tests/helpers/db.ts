@@ -8,7 +8,13 @@ import { applyTestEnv, TEST_USER_EMAIL, TEST_USER_PASSWORD } from "./test-env";
 applyTestEnv();
 
 export async function runMigrations() {
-  const { db } = await import("@/db/client");
+  const { db, pool } = await import("@/db/client");
+
+  await pool.query(`
+    DROP SCHEMA IF EXISTS "drizzle" CASCADE;
+    DROP SCHEMA IF EXISTS "public" CASCADE;
+    CREATE SCHEMA "public";
+  `);
 
   await migrate(db, {
     migrationsFolder: path.join(process.cwd(), "src", "db", "migrations"),

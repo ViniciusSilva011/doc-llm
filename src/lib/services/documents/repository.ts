@@ -5,7 +5,7 @@ import { documentChunks, documents, ingestionJobs } from "@/db/schema";
 import type { TextChunk } from "@/types/ingestion";
 
 export async function createDocument(input: {
-  ownerId: string;
+  ownerId: number;
   title: string;
   originalFilename: string;
   storageBackend: "local" | "s3";
@@ -39,7 +39,7 @@ export async function createDocument(input: {
   return document;
 }
 
-export async function getDocumentById(documentId: string) {
+export async function getDocumentById(documentId: number) {
   const [document] = await db
     .select()
     .from(documents)
@@ -49,7 +49,7 @@ export async function getDocumentById(documentId: string) {
   return document ?? null;
 }
 
-export async function listDocumentsForUser(userId: string) {
+export async function listDocumentsForUser(userId: number) {
   return db
     .select({
       id: documents.id,
@@ -71,7 +71,7 @@ export async function listDocumentsForUser(userId: string) {
     .orderBy(desc(documents.createdAt));
 }
 
-export async function replaceDocumentChunks(documentId: string, chunks: TextChunk[], embeddings: number[][]) {
+export async function replaceDocumentChunks(documentId: number, chunks: TextChunk[], embeddings: number[][]) {
   if (chunks.length !== embeddings.length) {
     throw new Error(
       `Chunk and embedding counts must match. Received ${chunks.length} chunks and ${embeddings.length} embeddings.`,
@@ -99,7 +99,7 @@ export async function replaceDocumentChunks(documentId: string, chunks: TextChun
 }
 
 export async function updateDocumentStatus(input: {
-  documentId: string;
+  documentId: number;
   status: "uploaded" | "queued" | "processing" | "processed" | "failed";
   lastIngestedAt?: Date;
   metadata?: Record<string, unknown>;
@@ -131,7 +131,7 @@ export async function updateDocumentStatus(input: {
   return document;
 }
 
-export async function countDashboardStats(userId: string) {
+export async function countDashboardStats(userId: number) {
   const [documentCount] = await db
     .select({ value: count(documents.id) })
     .from(documents)
@@ -154,7 +154,7 @@ export async function countDashboardStats(userId: string) {
   };
 }
 
-export async function ensureDocumentsBelongToUser(userId: string, documentIds: string[]) {
+export async function ensureDocumentsBelongToUser(userId: number, documentIds: number[]) {
   if (documentIds.length === 0) {
     return true;
   }

@@ -1,4 +1,3 @@
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 CREATE EXTENSION IF NOT EXISTS "vector";
 
 DO $$
@@ -18,7 +17,7 @@ END
 $$;
 
 CREATE TABLE IF NOT EXISTS "users" (
-  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "id" integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY NOT NULL,
   "name" varchar(255),
   "email" varchar(255) NOT NULL,
   "email_verified" timestamptz,
@@ -31,7 +30,7 @@ CREATE TABLE IF NOT EXISTS "users" (
 );
 
 CREATE TABLE IF NOT EXISTS "accounts" (
-  "user_id" uuid NOT NULL,
+  "user_id" integer NOT NULL,
   "type" varchar(255) NOT NULL,
   "provider" varchar(255) NOT NULL,
   "provider_account_id" varchar(255) NOT NULL,
@@ -48,7 +47,7 @@ CREATE TABLE IF NOT EXISTS "accounts" (
 
 CREATE TABLE IF NOT EXISTS "sessions" (
   "session_token" varchar(255) PRIMARY KEY NOT NULL,
-  "user_id" uuid NOT NULL,
+  "user_id" integer NOT NULL,
   "expires" timestamptz NOT NULL
 );
 
@@ -60,8 +59,8 @@ CREATE TABLE IF NOT EXISTS "verification_tokens" (
 );
 
 CREATE TABLE IF NOT EXISTS "documents" (
-  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-  "owner_id" uuid NOT NULL,
+  "id" integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY NOT NULL,
+  "owner_id" integer NOT NULL,
   "title" varchar(255) NOT NULL,
   "status" "document_status" DEFAULT 'pending' NOT NULL,
   "source_object_key" text NOT NULL,
@@ -74,8 +73,8 @@ CREATE TABLE IF NOT EXISTS "documents" (
 );
 
 CREATE TABLE IF NOT EXISTS "document_chunks" (
-  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-  "document_id" uuid NOT NULL,
+  "id" integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY NOT NULL,
+  "document_id" integer NOT NULL,
   "chunk_index" integer NOT NULL,
   "content" text NOT NULL,
   "token_count" integer NOT NULL,
@@ -85,9 +84,9 @@ CREATE TABLE IF NOT EXISTS "document_chunks" (
 );
 
 CREATE TABLE IF NOT EXISTS "ingestion_jobs" (
-  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-  "document_id" uuid NOT NULL,
-  "created_by_user_id" uuid NOT NULL,
+  "id" integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY NOT NULL,
+  "document_id" integer NOT NULL,
+  "created_by_user_id" integer NOT NULL,
   "status" "ingestion_job_status" DEFAULT 'pending' NOT NULL,
   "attempt_count" integer DEFAULT 0 NOT NULL,
   "max_attempts" integer DEFAULT 3 NOT NULL,

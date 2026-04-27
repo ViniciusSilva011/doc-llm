@@ -7,7 +7,6 @@ import {
   text,
   timestamp,
   uniqueIndex,
-  uuid,
   varchar,
   vector,
 } from "drizzle-orm/pg-core";
@@ -35,8 +34,8 @@ export const ingestionJobStatusEnum = pgEnum("ingestion_job_status", [
 export const documents = pgTable(
   "documents",
   {
-    id: uuid("id").defaultRandom().primaryKey(),
-    ownerId: uuid("owner_id")
+    id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
+    ownerId: integer("owner_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     title: varchar("title", { length: 255 }).notNull(),
@@ -75,8 +74,8 @@ export const documents = pgTable(
 export const documentChunks = pgTable(
   "document_chunks",
   {
-    id: uuid("id").defaultRandom().primaryKey(),
-    documentId: uuid("document_id")
+    id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
+    documentId: integer("document_id")
       .notNull()
       .references(() => documents.id, { onDelete: "cascade" }),
     chunkIndex: integer("chunk_index").notNull(),
@@ -105,11 +104,11 @@ export const documentChunks = pgTable(
 export const ingestionJobs = pgTable(
   "ingestion_jobs",
   {
-    id: uuid("id").defaultRandom().primaryKey(),
-    documentId: uuid("document_id")
+    id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
+    documentId: integer("document_id")
       .notNull()
       .references(() => documents.id, { onDelete: "cascade" }),
-    createdByUserId: uuid("created_by_user_id")
+    createdByUserId: integer("created_by_user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     status: ingestionJobStatusEnum("status").notNull().default("pending"),

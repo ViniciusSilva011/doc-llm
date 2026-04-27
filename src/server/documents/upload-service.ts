@@ -18,7 +18,7 @@ function deriveTitleFromFilename(filename: string) {
 }
 
 export async function uploadPdfDocument(params: {
-  ownerId: string;
+  ownerId: number;
   file: File;
   title?: string;
 }) {

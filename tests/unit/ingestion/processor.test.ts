@@ -30,7 +30,7 @@ describe("IngestionProcessor", () => {
 
   it("processes a document, enriches chunks, and stores ingestion metadata", async () => {
     mocks.getDocumentById.mockResolvedValue({
-      id: "doc-1",
+      id: 10,
       storageKey: "documents/user-1/file.pdf",
       contentType: "application/pdf",
       metadata: {
@@ -79,8 +79,8 @@ describe("IngestionProcessor", () => {
 
     await expect(
       processor.process({
-        id: "job-1",
-        documentId: "doc-1",
+        id: 20,
+        documentId: 10,
       }),
     ).resolves.toEqual({ chunkCount: 1 });
 
@@ -93,7 +93,7 @@ describe("IngestionProcessor", () => {
       objectKey: "documents/user-1/file.pdf",
     });
     expect(mocks.replaceDocumentChunks).toHaveBeenCalledWith(
-      "doc-1",
+      10,
       [
         expect.objectContaining({
           index: 0,
@@ -108,13 +108,13 @@ describe("IngestionProcessor", () => {
       [Array.from({ length: DEFAULT_EMBEDDING_DIMENSION }, () => 0.1)],
     );
     expect(mocks.updateDocumentStatus).toHaveBeenNthCalledWith(1, {
-      documentId: "doc-1",
+      documentId: 10,
       status: "processing",
     });
     expect(mocks.updateDocumentStatus).toHaveBeenNthCalledWith(
       2,
       expect.objectContaining({
-        documentId: "doc-1",
+        documentId: 10,
         status: "processed",
         lastIngestedAt: expect.any(Date),
         metadata: {
@@ -129,7 +129,7 @@ describe("IngestionProcessor", () => {
         },
       }),
     );
-    expect(mocks.completeIngestionJob).toHaveBeenCalledWith("job-1");
+    expect(mocks.completeIngestionJob).toHaveBeenCalledWith(20);
     expect(mocks.failIngestionJob).not.toHaveBeenCalled();
   });
 
@@ -153,14 +153,14 @@ describe("IngestionProcessor", () => {
 
     await expect(
       processor.process({
-        id: "job-1",
-        documentId: "missing-doc",
+        id: 20,
+        documentId: 999,
       }),
-    ).rejects.toThrow("Document missing-doc was not found.");
+    ).rejects.toThrow("Document 999 was not found.");
 
     expect(mocks.failIngestionJob).toHaveBeenCalledWith(
-      "job-1",
-      "Document missing-doc was not found.",
+      20,
+      "Document 999 was not found.",
       { retryable: false },
     );
     expect(mocks.updateDocumentStatus).not.toHaveBeenCalled();
@@ -168,7 +168,7 @@ describe("IngestionProcessor", () => {
 
   it("fails without retry when no text can be extracted", async () => {
     mocks.getDocumentById.mockResolvedValue({
-      id: "doc-1",
+      id: 10,
       storageKey: "documents/user-1/file.pdf",
       contentType: "application/pdf",
       metadata: {},
@@ -199,30 +199,30 @@ describe("IngestionProcessor", () => {
 
     await expect(
       processor.process({
-        id: "job-1",
-        documentId: "doc-1",
+        id: 20,
+        documentId: 10,
       }),
     ).rejects.toThrow("No extractable text was found in the document.");
 
     expect(mocks.failIngestionJob).toHaveBeenCalledWith(
-      "job-1",
+      20,
       "No extractable text was found in the document.",
       { retryable: false },
     );
     expect(mocks.replaceDocumentChunks).not.toHaveBeenCalled();
     expect(mocks.updateDocumentStatus).toHaveBeenNthCalledWith(1, {
-      documentId: "doc-1",
+      documentId: 10,
       status: "processing",
     });
     expect(mocks.updateDocumentStatus).toHaveBeenNthCalledWith(2, {
-      documentId: "doc-1",
+      documentId: 10,
       status: "failed",
     });
   });
 
   it("fails without retry when embeddings do not match chunk count", async () => {
     mocks.getDocumentById.mockResolvedValue({
-      id: "doc-1",
+      id: 10,
       storageKey: "documents/user-1/file.pdf",
       contentType: "application/pdf",
       metadata: {},
@@ -255,19 +255,19 @@ describe("IngestionProcessor", () => {
 
     await expect(
       processor.process({
-        id: "job-1",
-        documentId: "doc-1",
+        id: 20,
+        documentId: 10,
       }),
     ).rejects.toThrow("Expected 1 embeddings but received 0.");
 
     expect(mocks.failIngestionJob).toHaveBeenCalledWith(
-      "job-1",
+      20,
       "Expected 1 embeddings but received 0.",
       { retryable: false },
     );
     expect(mocks.replaceDocumentChunks).not.toHaveBeenCalled();
     expect(mocks.updateDocumentStatus).toHaveBeenNthCalledWith(2, {
-      documentId: "doc-1",
+      documentId: 10,
       status: "failed",
     });
   });

@@ -17,7 +17,7 @@ export async function POST(request: Request) {
 
     const titleField = formData.get("title");
     const uploadParams: {
-      ownerId: string;
+      ownerId: number;
       file: File;
       title?: string;
     } = {

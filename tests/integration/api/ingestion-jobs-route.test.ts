@@ -84,8 +84,8 @@ describe("POST /api/ingestion-jobs", () => {
     expect(response.status).toBe(201);
 
     const payload = (await response.json()) as {
-      document: { id: string };
-      job: { id: string };
+      document: { id: number };
+      job: { id: number };
     };
 
     const [document] = await db

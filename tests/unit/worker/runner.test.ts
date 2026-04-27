@@ -26,8 +26,8 @@ describe("worker runner", () => {
 
   it("processes a claimed job", async () => {
     const claimNextPendingJob = vi.fn().mockResolvedValue({
-      id: "job-1",
-      documentId: "doc-1",
+      id: 20,
+      documentId: 10,
     });
     const processor = {
       process: vi.fn().mockResolvedValue(undefined),
@@ -41,11 +41,11 @@ describe("worker runner", () => {
         sleep,
         pollIntervalMs: 25,
       }),
-    ).resolves.toEqual({ status: "processed", jobId: "job-1" });
+    ).resolves.toEqual({ status: "processed", jobId: 20 });
 
     expect(processor.process).toHaveBeenCalledWith({
-      id: "job-1",
-      documentId: "doc-1",
+      id: 20,
+      documentId: 10,
     });
     expect(sleep).not.toHaveBeenCalled();
   });
@@ -53,8 +53,8 @@ describe("worker runner", () => {
   it("logs failures from the processor and returns a failed result", async () => {
     const error = new Error("boom");
     const claimNextPendingJob = vi.fn().mockResolvedValue({
-      id: "job-1",
-      documentId: "doc-1",
+      id: 20,
+      documentId: 10,
     });
     const processor = {
       process: vi.fn().mockRejectedValue(error),
@@ -72,9 +72,9 @@ describe("worker runner", () => {
         pollIntervalMs: 25,
         logger,
       }),
-    ).resolves.toEqual({ status: "failed", jobId: "job-1", error });
+    ).resolves.toEqual({ status: "failed", jobId: 20, error });
 
-    expect(logger.error).toHaveBeenCalledWith("Job job-1 failed.", error);
+    expect(logger.error).toHaveBeenCalledWith("Job 20 failed.", error);
     expect(sleep).not.toHaveBeenCalled();
   });
 
@@ -82,7 +82,7 @@ describe("worker runner", () => {
     const claimNextPendingJob = vi
       .fn()
       .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce({ id: "job-2", documentId: "doc-2" });
+      .mockResolvedValueOnce({ id: 21, documentId: 11 });
     const processor = {
       process: vi.fn().mockResolvedValue(undefined),
     };
@@ -111,8 +111,8 @@ describe("worker runner", () => {
     expect(claimNextPendingJob).toHaveBeenCalledTimes(2);
     expect(sleep).toHaveBeenCalledWith(10);
     expect(processor.process).toHaveBeenCalledWith({
-      id: "job-2",
-      documentId: "doc-2",
+      id: 21,
+      documentId: 11,
     });
   });
 });

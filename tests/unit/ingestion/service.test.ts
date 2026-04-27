@@ -47,10 +47,10 @@ describe("enqueueIngestionJob", () => {
     mocks.computeSha256Hex.mockReturnValue("sha-text");
     mocks.createDocumentStorageKey.mockReturnValue("documents/user-1/support-notes.pdf");
     mocks.sanitizeFilename.mockImplementation((value: string) => value);
-    mocks.createDocument.mockResolvedValue({ id: "doc-1" });
-    mocks.createIngestionJob.mockResolvedValue({ id: "job-1" });
+    mocks.createDocument.mockResolvedValue({ id: 10 });
+    mocks.createIngestionJob.mockResolvedValue({ id: 20 });
 
-    const result = await enqueueIngestionJob("user-1", {
+    const result = await enqueueIngestionJob(1, {
       title: "Support notes",
       content: "hello from support",
       mimeType: "text/plain",
@@ -65,7 +65,7 @@ describe("enqueueIngestionJob", () => {
       checksum: "sha-text",
     });
     expect(mocks.createDocument).toHaveBeenCalledWith({
-      ownerId: "user-1",
+      ownerId: 1,
       title: "Support notes",
       originalFilename: "Support notes.txt",
       storageBackend: "local",
@@ -77,12 +77,12 @@ describe("enqueueIngestionJob", () => {
       metadata: { source: "manual" },
     });
     expect(mocks.createIngestionJob).toHaveBeenCalledWith({
-      documentId: "doc-1",
-      createdByUserId: "user-1",
+      documentId: 10,
+      createdByUserId: 1,
     });
     expect(result).toEqual({
-      document: { id: "doc-1" },
-      job: { id: "job-1" },
+      document: { id: 10 },
+      job: { id: 20 },
     });
   });
 
@@ -102,10 +102,10 @@ describe("enqueueIngestionJob", () => {
     mocks.computeSha256Hex.mockReturnValue("sha-json");
     mocks.createDocumentStorageKey.mockReturnValue("documents/user-1/export.pdf");
     mocks.sanitizeFilename.mockImplementation((value: string) => value);
-    mocks.createDocument.mockResolvedValue({ id: "doc-2" });
-    mocks.createIngestionJob.mockResolvedValue({ id: "job-2" });
+    mocks.createDocument.mockResolvedValue({ id: 11 });
+    mocks.createIngestionJob.mockResolvedValue({ id: 21 });
 
-    await enqueueIngestionJob("user-1", {
+    await enqueueIngestionJob(1, {
       title: "Export",
       content: '{"ok": true }',
       mimeType: "application/json",

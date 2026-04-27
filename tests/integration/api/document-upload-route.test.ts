@@ -99,7 +99,7 @@ describe("POST /api/documents/upload", () => {
     expect(response.status).toBe(201);
 
     const payload = (await response.json()) as {
-      documentId: string;
+      documentId: number;
       filename: string;
       status: string;
       backend: string;

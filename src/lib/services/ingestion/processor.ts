@@ -28,8 +28,8 @@ export class IngestionProcessor {
   ) {}
 
   async process(job: {
-    id: string;
-    documentId: string;
+    id: number;
+    documentId: number;
   }): Promise<{ chunkCount: number }> {
     const storage = this.dependencies.storage ?? getObjectStorageService();
     const document = await getDocumentById(job.documentId);

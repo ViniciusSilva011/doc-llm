@@ -15,8 +15,8 @@ import { Textarea } from "@/components/ui/textarea";
 interface QueryResponse {
   answer: string;
   matches: Array<{
-    id: string;
-    documentId: string;
+    id: number;
+    documentId: number;
     content: string;
     score: number;
   }>;

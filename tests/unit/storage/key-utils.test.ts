@@ -13,13 +13,13 @@ describe("storage key helpers", () => {
 
   it("creates namespaced storage keys with a stable pdf suffix", () => {
     const key = createDocumentStorageKey({
-      ownerId: "user-123",
+      ownerId: 123,
       originalFilename: "Quarterly Report.pdf",
       now: new Date("2026-04-21T09:15:00.000Z"),
       id: "fixed-id",
     });
 
-    expect(key).toBe("documents/user-123/2026/04/21/fixed-id-Quarterly-Report.pdf");
+    expect(key).toBe("documents/123/2026/04/21/fixed-id-Quarterly-Report.pdf");
   });
 
   it("computes sha256 checksums", () => {
