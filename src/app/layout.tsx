@@ -7,6 +7,22 @@ export const metadata: Metadata = {
   title: "Doc LLM Starter",
   description:
     "Production-oriented SaaS starter with Next.js, Auth.js, PostgreSQL, pgvector, background ingestion, and OpenAI.",
+  icons: {
+    icon: [
+      {
+        url: "/favicon.png",
+        type: "image/png",
+        sizes: "1254x1254",
+      },
+    ],
+    apple: [
+      {
+        url: "/app-icon.png",
+        type: "image/png",
+        sizes: "1254x1254",
+      },
+    ],
+  },
 };
 
 export default function RootLayout({

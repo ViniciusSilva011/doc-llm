@@ -1,46 +1,104 @@
-import { and, eq, inArray, sql } from "drizzle-orm";
+import type { QueryResult } from "pg";
 
-import { db } from "@/db/client";
-import { documentChunks, documents } from "@/db/schema";
+import { pool } from "@/db/client";
 import { env } from "@/lib/env";
 import { createOpenAIService } from "@/lib/services/openai/service";
 import type { QueryResultChunk } from "@/types/ingestion";
+
+type EmbeddingProvider = Pick<
+  ReturnType<typeof createOpenAIService>,
+  "createEmbeddings"
+>;
+
+type ChunkQueryClient = {
+  query: (
+    sql: string,
+    values: unknown[],
+  ) => Promise<Pick<QueryResult<QueryResultChunk>, "rows">>;
+};
+
+type FetchRelevantChunksOptions = {
+  userId?: number;
+  documentIds?: number[];
+  limit?: number;
+};
+
+type FetchRelevantChunksDependencies = {
+  embeddingProvider?: EmbeddingProvider;
+  database?: ChunkQueryClient;
+};
+
+function toVectorLiteral(embedding: number[]) {
+  return `[${embedding.join(",")}]`;
+}
+
+export async function fetchRelevantChunks(
+  question: string,
+  options: FetchRelevantChunksOptions = {},
+  dependencies: FetchRelevantChunksDependencies = {},
+): Promise<QueryResultChunk[]> {
+  const embeddingProvider = dependencies.embeddingProvider ?? createOpenAIService();
+  const database = dependencies.database ?? pool;
+  const limit = options.limit ?? env.INGESTION_QUERY_MATCH_LIMIT;
+
+  const [embedding] = await embeddingProvider.createEmbeddings([question]);
+  if (!embedding) {
+    throw new Error("Failed to generate a query embedding.");
+  }
+
+  const conditions: string[] = [];
+  const values: unknown[] = [toVectorLiteral(embedding)];
+
+  if (options.userId) {
+    values.push(options.userId);
+    conditions.push(`d.owner_id = $${values.length}`);
+  }
+
+  if (options.documentIds?.length) {
+    values.push(options.documentIds);
+    conditions.push(`dc.document_id = ANY($${values.length}::integer[])`);
+  }
+
+  values.push(limit);
+
+  const whereClause = conditions.length
+    ? `WHERE ${conditions.join(" AND ")}`
+    : "";
+
+  const { rows } = await database.query(
+    `
+      SELECT
+        dc.id,
+        dc.document_id AS "documentId",
+        dc.content,
+        1 - (dc.embedding <=> $1::vector) AS score
+      FROM document_chunks dc
+      INNER JOIN documents d ON dc.document_id = d.id
+      ${whereClause}
+      ORDER BY dc.embedding <=> $1::vector
+      LIMIT $${values.length}
+    `,
+    values,
+  );
+
+  return rows;
+}
 
 export async function queryDocumentChunks(input: {
   userId: number;
   question: string;
   documentIds?: number[];
 }): Promise<QueryResultChunk[]> {
-  const openAI = createOpenAIService();
-  const [embedding] = await openAI.createEmbeddings([input.question]);
+  const options: FetchRelevantChunksOptions = {
+    userId: input.userId,
+    limit: env.INGESTION_QUERY_MATCH_LIMIT,
+  };
 
-  if (!embedding) {
-    throw new Error("Failed to generate a query embedding.");
+  if (input.documentIds) {
+    options.documentIds = input.documentIds;
   }
 
-  const embeddingLiteral = `[${embedding.join(",")}]`;
-
-  const rows = await db
-    .select({
-      id: documentChunks.id,
-      documentId: documentChunks.documentId,
-      content: documentChunks.content,
-      score: sql<number>`1 - (${documentChunks.embedding} <=> ${embeddingLiteral}::vector)`.mapWith(Number),
-    })
-    .from(documentChunks)
-    .innerJoin(documents, eq(documentChunks.documentId, documents.id))
-    .where(
-      and(
-        eq(documents.ownerId, input.userId),
-        input.documentIds?.length
-          ? inArray(documentChunks.documentId, input.documentIds)
-          : undefined,
-      ),
-    )
-    .orderBy(sql`${documentChunks.embedding} <=> ${embeddingLiteral}::vector`)
-    .limit(env.INGESTION_QUERY_MATCH_LIMIT);
-
-  return rows;
+  return fetchRelevantChunks(input.question, options);
 }
 
 export async function generateAnswerFromDocuments(input: {

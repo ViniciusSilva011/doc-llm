@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 import { getOptionalSession } from "@/auth/session";
 import { SignOutButton } from "@/components/auth/sign-out-button";
@@ -10,7 +11,18 @@ export async function AppHeader() {
   return (
     <header className="sticky top-0 z-20 border-b border-border/70 bg-background/95 backdrop-blur-xl">
       <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-4">
-        <Link className="text-lg font-semibold tracking-tight text-foreground" href="/">
+        <Link
+          className="flex items-center gap-2 text-lg font-semibold tracking-tight text-foreground"
+          href="/"
+        >
+          <Image
+            src="/app-icon.png"
+            alt=""
+            width={32}
+            height={32}
+            className="size-8 rounded-lg"
+            priority
+          />
           Doc LLM Starter
         </Link>
 

@@ -142,6 +142,12 @@ Requirements:
 - PostgreSQL running
 - `TEST_DATABASE_URL` reachable
 - migrations available
+- Ollama running at `EMBEDDING_BASE_URL`
+- `nomic-embed-text` pulled in Ollama:
+
+```bash
+ollama pull nomic-embed-text
+```
 
 Command:
 
