@@ -5,7 +5,7 @@ import path from "node:path";
 import { createPdfBuffer } from "../helpers/files";
 import { signIn } from "./helpers/auth";
 
-test("user uploads a valid pdf and sees it in the documents list", async ({ page }) => {
+test("user uploads a valid pdf and sees it in the dashboard documents list", async ({ page }) => {
   await signIn(page);
 
   const filename = `strategy-memo-${Date.now()}.pdf`;
@@ -20,7 +20,7 @@ test("user uploads a valid pdf and sees it in the documents list", async ({ page
   });
 
   await expect(uploadResponse).toBeOK();
-  await page.goto("/documents");
+  await page.goto("/dashboard");
 
   const row = page
     .getByRole("row")
@@ -29,8 +29,8 @@ test("user uploads a valid pdf and sees it in the documents list", async ({ page
 
   await expect(row).toBeVisible();
   await expect(row.getByRole("cell", { name: filename })).toBeVisible();
-  await expect(row.getByRole("cell", { name: "queued" })).toBeVisible();
-  await expect(row.getByRole("link", { name: "Chat" })).toHaveAttribute(
+  await expect(row.getByRole("link", { name: "Status: queued" })).toBeVisible();
+  await expect(row.getByRole("link", { name: filename }).first()).toHaveAttribute(
     "href",
     /\/documents\/\d+\/chat$/,
   );
@@ -59,7 +59,7 @@ test("user uploads the public ai_text_full_v2 pdf with a custom title", async ({
   });
 
   await expect(uploadResponse).toBeOK();
-  await page.goto("/documents");
+  await page.goto("/dashboard");
 
   const row = page
     .getByRole("row")
@@ -68,7 +68,7 @@ test("user uploads the public ai_text_full_v2 pdf with a custom title", async ({
 
   await expect(row).toBeVisible();
   await expect(row.getByRole("cell", { name: title })).toBeVisible();
-  await expect(row.getByRole("cell", { name: "queued" })).toBeVisible();
+  await expect(row.getByRole("link", { name: "Status: queued" })).toBeVisible();
 });
 
 test("invalid file uploads show a validation error", async ({ page }) => {

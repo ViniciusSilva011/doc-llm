@@ -3,24 +3,24 @@ export interface WorkerJob {
   documentId: number;
 }
 
-export interface WorkerProcessor {
-  process(job: WorkerJob): Promise<unknown>;
+export interface WorkerProcessor<TJob extends WorkerJob = WorkerJob> {
+  process(job: TJob): Promise<unknown>;
 }
 
 export interface WorkerLogger {
   error(message?: unknown, ...optionalParams: unknown[]): void;
 }
 
-export interface WorkerDependencies {
-  claimNextPendingJob: () => Promise<WorkerJob | null>;
-  processor: WorkerProcessor;
+export interface WorkerDependencies<TJob extends WorkerJob = WorkerJob> {
+  claimNextPendingJob: () => Promise<TJob | null>;
+  processor: WorkerProcessor<TJob>;
   sleep: (milliseconds: number) => Promise<void>;
   pollIntervalMs: number;
   logger?: WorkerLogger;
 }
 
-export async function runWorkerIteration(
-  dependencies: WorkerDependencies,
+export async function runWorkerIteration<TJob extends WorkerJob>(
+  dependencies: WorkerDependencies<TJob>,
 ): Promise<
   | { status: "idle" }
   | { status: "processed"; jobId: number }
@@ -42,8 +42,8 @@ export async function runWorkerIteration(
   }
 }
 
-export async function startWorker(
-  dependencies: WorkerDependencies,
+export async function startWorker<TJob extends WorkerJob>(
+  dependencies: WorkerDependencies<TJob>,
   options?: {
     shouldContinue?: () => boolean | Promise<boolean>;
   },

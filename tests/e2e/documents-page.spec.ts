@@ -2,14 +2,14 @@ import { expect, test } from "@playwright/test";
 
 import { signIn } from "./helpers/auth";
 
-test("authenticated user can open the documents page", async ({ page }) => {
+test("authenticated user can open the upload page", async ({ page }) => {
   await signIn(page);
-  await page.goto("/documents");
+  await page.goto("/upload");
 
-  await expect(page).toHaveURL(/\/documents$/);
+  await expect(page).toHaveURL(/\/upload$/);
   await expect(page.getByRole("heading", { name: "Upload PDF documents for ingestion." })).toBeVisible();
   await expect(page.getByLabel("PDF file")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Tracked documents" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Latest uploads" })).toBeVisible();
 });
 
 test("sign-in page uses a black application background", async ({ page }) => {

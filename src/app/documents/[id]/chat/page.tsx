@@ -50,9 +50,9 @@ export default async function DocumentChatPage({
       <section className="space-y-4">
         <Link
           className="text-sm font-medium text-primary underline-offset-4 hover:underline"
-          href="/documents"
+          href="/dashboard"
         >
-          Back to documents
+          Back to dashboard
         </Link>
         <div className="space-y-3">
           <Badge>PDF chat</Badge>

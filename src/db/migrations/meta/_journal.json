@@ -29,6 +29,13 @@
       "when": 1760003000000,
       "tag": "0003_document_chat_messages",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1760004000000,
+      "tag": "0004_document_chat_jobs",
+      "breakpoints": true
     }
   ]
 }

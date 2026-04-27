@@ -1,5 +1,5 @@
 import { requirePageSession } from "@/auth/session";
-import { DocumentQueryForm } from "@/components/query/document-query-form";
+import { DocumentTableRow } from "@/components/documents/document-table-row";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -8,8 +8,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { getDashboardData } from "@/lib/services/dashboard";
-import { formatDateTime } from "@/lib/utils";
 
 export default async function DashboardPage() {
   const session = await requirePageSession();
@@ -51,50 +58,58 @@ export default async function DashboardPage() {
         </Card>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+      <section>
         <Card className="border-border/70 bg-card shadow-xl backdrop-blur">
           <CardHeader>
-            <CardTitle>Recent jobs</CardTitle>
+            <CardTitle>Tracked documents</CardTitle>
             <CardDescription>
-              The worker claims pending jobs from PostgreSQL and updates status as it
-              processes source objects.
+              Recent uploads with their current ingestion status and chat actions.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ul className="space-y-3">
-              {dashboard.recentJobs.length > 0 ? (
-                dashboard.recentJobs.map((job) => (
-                  <li
-                    className="rounded-xl border border-border/80 bg-muted/35 p-4"
-                    key={job.id}
-                  >
-                    <p className="text-sm">
-                      <strong>Status:</strong> {job.status}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Document {job.documentId} | Created {formatDateTime(job.createdAt)}
-                    </p>
-                    {job.errorMessage ? (
-                      <p className="mt-2 text-sm text-destructive">{job.errorMessage}</p>
-                    ) : null}
-                  </li>
-                ))
-              ) : (
-                <li className="text-sm text-muted-foreground">No ingestion jobs yet.</li>
-              )}
-            </ul>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ID</TableHead>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Filename</TableHead>
+                    <TableHead>Backend</TableHead>
+                    <TableHead>Size</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Chunks</TableHead>
+                    <TableHead>Updated At</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {dashboard.documents.length > 0 ? (
+                    dashboard.documents.map((document) => (
+                      <DocumentTableRow
+                        document={{
+                          id: document.id,
+                          title: document.title,
+                          originalFilename: document.originalFilename,
+                          status: document.status,
+                          storageBackend: document.storageBackend,
+                          byteSize: document.byteSize,
+                          chunkCount: document.chunkCount,
+                          updatedAt: document.updatedAt.toISOString(),
+                        }}
+                        key={document.id}
+                      />
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell className="text-muted-foreground" colSpan={8}>
+                        No documents have been submitted yet.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
-
-        <DocumentQueryForm
-          documents={dashboard.documents.map((document) => ({
-            id: document.id,
-            title: document.title,
-            originalFilename: document.originalFilename,
-            status: document.status,
-            createdAt: document.createdAt.toISOString(),
-          }))}
-        />
       </section>
     </div>
   );

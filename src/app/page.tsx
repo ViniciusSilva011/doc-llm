@@ -37,7 +37,7 @@ export default async function LandingPage() {
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline">
-                <Link href="/documents">View documents</Link>
+                <Link href="/upload">Upload documents</Link>
               </Button>
             </div>
           </div>

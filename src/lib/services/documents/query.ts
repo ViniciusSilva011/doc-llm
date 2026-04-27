@@ -37,7 +37,8 @@ export async function fetchRelevantChunks(
   options: FetchRelevantChunksOptions = {},
   dependencies: FetchRelevantChunksDependencies = {},
 ): Promise<QueryResultChunk[]> {
-  const embeddingProvider = dependencies.embeddingProvider ?? createOpenAIService();
+  const embeddingProvider =
+    dependencies.embeddingProvider ?? createOpenAIService();
   const database = dependencies.database ?? pool;
   const limit = options.limit ?? env.INGESTION_QUERY_MATCH_LIMIT;
 
@@ -123,6 +124,9 @@ export async function generateAnswerFromDocuments(input: {
         `Source ${index + 1} (document ${match.documentId}, score ${match.score.toFixed(3)}):\n${match.content}`,
     )
     .join("\n\n");
+
+  console.log("context: ", context);
+  console.log("matches: ", matches);
 
   const answer = await openAI.generateText({
     instructions:

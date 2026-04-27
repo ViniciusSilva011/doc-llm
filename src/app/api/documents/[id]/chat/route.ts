@@ -2,9 +2,11 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { requireApiSession } from "@/auth/session";
-import { createDocumentChatMessage } from "@/lib/services/documents/chat";
+import {
+  createDocumentChatJob,
+  createDocumentChatMessage,
+} from "@/lib/services/documents/chat";
 import { getDocumentForUser } from "@/lib/services/documents/repository";
-import { generateAnswerFromDocuments } from "@/lib/services/documents/query";
 import { handleRouteError } from "@/server/http";
 
 const chatMessageSchema = z.object({
@@ -45,34 +47,27 @@ export async function POST(
 
     const payload = chatMessageSchema.parse(await request.json());
 
-    await createDocumentChatMessage({
+    const userMessage = await createDocumentChatMessage({
       documentId: document.id,
       userId: session.user.id,
       role: "user",
       content: payload.message,
     });
 
-    const answer = await generateAnswerFromDocuments({
-      userId: session.user.id,
-      question: payload.message,
-      documentIds: [document.id],
-    });
-
-    const assistantMessage = await createDocumentChatMessage({
+    const job = await createDocumentChatJob({
       documentId: document.id,
       userId: session.user.id,
-      role: "assistant",
-      content: answer.answer,
+      userMessageId: userMessage.id,
     });
 
     return NextResponse.json({
+      jobId: job.id,
       message: {
-        id: assistantMessage.id,
-        role: assistantMessage.role,
-        content: assistantMessage.content,
-        createdAt: assistantMessage.createdAt.toISOString(),
+        id: userMessage.id,
+        role: userMessage.role,
+        content: userMessage.content,
+        createdAt: userMessage.createdAt.toISOString(),
       },
-      matches: answer.matches,
     });
   } catch (error) {
     return handleRouteError(error);

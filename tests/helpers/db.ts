@@ -26,6 +26,8 @@ export async function resetDatabase() {
 
   await pool.query(`
     TRUNCATE TABLE
+      document_chat_jobs,
+      document_chat_messages,
       document_chunks,
       ingestion_jobs,
       documents,

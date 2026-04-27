@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,6 +14,14 @@ interface ChatMessage {
 }
 
 interface ChatResponse {
+  jobId: number;
+  message: ChatMessage;
+  error?: string;
+}
+
+interface ChatCompletedEvent {
+  type: "chat.completed";
+  jobId: number;
   message: ChatMessage;
   matches: Array<{
     id: number;
@@ -21,7 +29,12 @@ interface ChatResponse {
     content: string;
     score: number;
   }>;
-  error?: string;
+}
+
+interface ChatFailedEvent {
+  type: "chat.failed";
+  jobId: number;
+  error: string;
 }
 
 export function DocumentChat({
@@ -37,7 +50,70 @@ export function DocumentChat({
   const [message, setMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [matches, setMatches] = useState<ChatResponse["matches"]>([]);
+  const [pendingJobIds, setPendingJobIds] = useState<Set<number>>(new Set());
+  const [matches, setMatches] = useState<ChatCompletedEvent["matches"]>([]);
+
+  useEffect(() => {
+    if (!canSend) {
+      return;
+    }
+
+    const events = new EventSource(`/api/documents/${documentId}/chat/events`);
+
+    events.addEventListener("chat.connected", () => {
+      setError(null);
+    });
+
+    events.addEventListener("chat.completed", (event) => {
+      const payload = JSON.parse((event as MessageEvent<string>).data) as
+        | ChatCompletedEvent
+        | undefined;
+
+      if (!payload) {
+        return;
+      }
+
+      setMessages((current) => {
+        if (current.some((message) => message.id === payload.message.id)) {
+          return current;
+        }
+
+        return [...current, payload.message];
+      });
+      setMatches(payload.matches);
+      setPendingJobIds((current) => {
+        const next = new Set(current);
+        next.delete(payload.jobId);
+        return next;
+      });
+      setError(null);
+    });
+
+    events.addEventListener("chat.failed", (event) => {
+      const payload = JSON.parse((event as MessageEvent<string>).data) as
+        | ChatFailedEvent
+        | undefined;
+
+      if (!payload) {
+        return;
+      }
+
+      setPendingJobIds((current) => {
+        const next = new Set(current);
+        next.delete(payload.jobId);
+        return next;
+      });
+      setError(payload.error);
+    });
+
+    events.onerror = () => {
+      setError("Realtime chat updates disconnected. Reconnecting...");
+    };
+
+    return () => {
+      events.close();
+    };
+  }, [canSend, documentId]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -49,6 +125,16 @@ export function DocumentChat({
 
     setIsSubmitting(true);
     setError(null);
+    setMessage("");
+
+    const temporaryMessage: ChatMessage = {
+      id: -Date.now(),
+      role: "user",
+      content: trimmedMessage,
+      createdAt: new Date().toISOString(),
+    };
+
+    setMessages((current) => [...current, temporaryMessage]);
 
     const response = await fetch(`/api/documents/${documentId}/chat`, {
       method: "POST",
@@ -64,19 +150,19 @@ export function DocumentChat({
 
     if (!response.ok) {
       setError(payload.error ?? "Failed to send message.");
+      setMessages((current) =>
+        current.filter((chatMessage) => chatMessage.id !== temporaryMessage.id),
+      );
+      setMessage(trimmedMessage);
       return;
     }
 
-    const userMessage: ChatMessage = {
-      id: -Date.now(),
-      role: "user",
-      content: trimmedMessage,
-      createdAt: new Date().toISOString(),
-    };
-
-    setMessages((current) => [...current, userMessage, payload.message]);
-    setMatches(payload.matches);
-    setMessage("");
+    setMessages((current) =>
+      current.map((chatMessage) =>
+        chatMessage.id === temporaryMessage.id ? payload.message : chatMessage,
+      ),
+    );
+    setPendingJobIds((current) => new Set(current).add(payload.jobId));
   }
 
   return (
@@ -132,6 +218,12 @@ export function DocumentChat({
       {!canSend ? (
         <p className="text-sm text-muted-foreground">
           This PDF is not indexed yet. The chat unlocks after ingestion finishes.
+        </p>
+      ) : null}
+      {pendingJobIds.size > 0 ? (
+        <p className="text-sm text-muted-foreground">
+          Waiting for {pendingJobIds.size} answer
+          {pendingJobIds.size === 1 ? "" : "s"}...
         </p>
       ) : null}
       {error ? <p className="text-sm text-destructive">{error}</p> : null}

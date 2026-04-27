@@ -36,6 +36,13 @@ export const documentChatRoleEnum = pgEnum("document_chat_role", [
   "assistant",
 ]);
 
+export const documentChatJobStatusEnum = pgEnum("document_chat_job_status", [
+  "queued",
+  "processing",
+  "completed",
+  "failed",
+]);
+
 export const documents = pgTable(
   "documents",
   {
@@ -174,6 +181,51 @@ export const documentChatMessages = pgTable(
     userDocumentIndex: index("document_chat_messages_user_document_idx").on(
       table.userId,
       table.documentId,
+    ),
+  }),
+);
+
+export const documentChatJobs = pgTable(
+  "document_chat_jobs",
+  {
+    id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
+    documentId: integer("document_id")
+      .notNull()
+      .references(() => documents.id, { onDelete: "cascade" }),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    userMessageId: integer("user_message_id")
+      .notNull()
+      .references(() => documentChatMessages.id, { onDelete: "cascade" }),
+    status: documentChatJobStatusEnum("status").notNull().default("queued"),
+    error: text("error"),
+    createdAt: timestamp("created_at", {
+      mode: "date",
+      withTimezone: true,
+    })
+      .notNull()
+      .defaultNow(),
+    startedAt: timestamp("started_at", {
+      mode: "date",
+      withTimezone: true,
+    }),
+    completedAt: timestamp("completed_at", {
+      mode: "date",
+      withTimezone: true,
+    }),
+  },
+  (table) => ({
+    statusCreatedAtIndex: index("document_chat_jobs_status_created_at_idx").on(
+      table.status,
+      table.createdAt,
+    ),
+    userDocumentIndex: index("document_chat_jobs_user_document_idx").on(
+      table.userId,
+      table.documentId,
+    ),
+    userMessageIndex: index("document_chat_jobs_user_message_id_idx").on(
+      table.userMessageId,
     ),
   }),
 );

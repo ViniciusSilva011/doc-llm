@@ -36,8 +36,13 @@ export async function AppHeader() {
             </Link>
           ) : null}
           {session?.user ? (
-            <Link className="transition-colors hover:text-foreground" href="/documents">
-              Documents
+            <Link className="transition-colors hover:text-foreground" href="/upload">
+              Upload
+            </Link>
+          ) : null}
+          {session?.user ? (
+            <Link className="transition-colors hover:text-foreground" href="/query">
+              Query
             </Link>
           ) : null}
         </nav>

@@ -1,8 +1,19 @@
+import { eq } from "drizzle-orm";
 import { vi } from "vitest";
 
 import { db } from "@/db/client";
-import { documentChatMessages, documents, users } from "@/db/schema";
-import { listDocumentChatMessages } from "@/lib/services/documents/chat";
+import {
+  documentChatJobs,
+  documentChatMessages,
+  documents,
+  users,
+} from "@/db/schema";
+import {
+  claimNextDocumentChatJob,
+  createDocumentChatJob,
+  createDocumentChatMessage,
+  listDocumentChatMessages,
+} from "@/lib/services/documents/chat";
 import { getSeededUser } from "../../helpers/db";
 import { getTestRequestUrl } from "../../helpers/test-env";
 
@@ -80,7 +91,7 @@ describe("POST /api/documents/[id]/chat", () => {
     expect(generateAnswerFromDocumentsMock).not.toHaveBeenCalled();
   });
 
-  it("persists user and assistant messages for an owned processed document", async () => {
+  it("persists a user message and queues a chat job for an owned processed document", async () => {
     const seededUser = await getSeededUser();
     requireApiSessionMock.mockResolvedValue({
       user: {
@@ -108,18 +119,6 @@ describe("POST /api/documents/[id]/chat", () => {
       throw new Error("Failed to create owned document.");
     }
 
-    generateAnswerFromDocumentsMock.mockResolvedValue({
-      answer: "The document is about onboarding.",
-      matches: [
-        {
-          id: 1,
-          documentId: document.id,
-          content: "Onboarding context",
-          score: 0.91,
-        },
-      ],
-    });
-
     const response = await POST(
       new Request(getTestRequestUrl(`/api/documents/${document.id}/chat`), {
         method: "POST",
@@ -132,21 +131,16 @@ describe("POST /api/documents/[id]/chat", () => {
     );
 
     const payload = (await response.json()) as {
-      message: { role: string; content: string };
-      matches: Array<{ documentId: number }>;
+      jobId: number;
+      message: { id: number; role: string; content: string };
     };
 
     expect(response.status).toBe(200);
     expect(payload.message).toMatchObject({
-      role: "assistant",
-      content: "The document is about onboarding.",
+      role: "user",
+      content: "Summarize it.",
     });
-    expect(payload.matches[0]?.documentId).toBe(document.id);
-    expect(generateAnswerFromDocumentsMock).toHaveBeenCalledWith({
-      userId: seededUser.id,
-      question: "Summarize it.",
-      documentIds: [document.id],
-    });
+    expect(generateAnswerFromDocumentsMock).not.toHaveBeenCalled();
 
     const messages = await db
       .select()
@@ -160,13 +154,20 @@ describe("POST /api/documents/[id]/chat", () => {
         role: "user",
         content: "Summarize it.",
       }),
-      expect.objectContaining({
-        documentId: document.id,
-        userId: seededUser.id,
-        role: "assistant",
-        content: "The document is about onboarding.",
-      }),
     ]);
+
+    const [job] = await db
+      .select()
+      .from(documentChatJobs)
+      .where(eq(documentChatJobs.id, payload.jobId))
+      .limit(1);
+
+    expect(job).toMatchObject({
+      documentId: document.id,
+      userId: seededUser.id,
+      userMessageId: payload.message.id,
+      status: "queued",
+    });
   });
 
   it("returns prior messages ordered by creation time and id", async () => {
@@ -212,6 +213,66 @@ describe("POST /api/documents/[id]/chat", () => {
     expect(messages.map((message) => message.content)).toEqual([
       "First",
       "Second",
+    ]);
+  });
+
+  it("claims queued chat jobs without returning the same job twice", async () => {
+    const seededUser = await getSeededUser();
+    const [document] = await db
+      .insert(documents)
+      .values({
+        ownerId: seededUser.id,
+        title: "Claim PDF",
+        originalFilename: "claim.pdf",
+        status: "processed",
+        storageBackend: "local",
+        storageKey: "documents/claim.pdf",
+        contentType: "application/pdf",
+        byteSize: 512,
+      })
+      .returning();
+
+    if (!document) {
+      throw new Error("Failed to create claim document.");
+    }
+
+    const firstMessage = await createDocumentChatMessage({
+      documentId: document.id,
+      userId: seededUser.id,
+      role: "user",
+      content: "First question",
+    });
+    const secondMessage = await createDocumentChatMessage({
+      documentId: document.id,
+      userId: seededUser.id,
+      role: "user",
+      content: "Second question",
+    });
+
+    await createDocumentChatJob({
+      documentId: document.id,
+      userId: seededUser.id,
+      userMessageId: firstMessage.id,
+    });
+    await createDocumentChatJob({
+      documentId: document.id,
+      userId: seededUser.id,
+      userMessageId: secondMessage.id,
+    });
+
+    const claimedJobs = await Promise.all([
+      claimNextDocumentChatJob(),
+      claimNextDocumentChatJob(),
+    ]);
+
+    expect(new Set(claimedJobs.map((job) => job?.id)).size).toBe(2);
+    expect(claimedJobs.map((job) => job?.status)).toEqual([
+      "processing",
+      "processing",
+    ]);
+    expect(claimedJobs.map((job) => job?.question).sort()).toEqual([
+      "First question",
+      "Second question",
     ]);
   });
 });

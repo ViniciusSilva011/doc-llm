@@ -13,11 +13,24 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { formatDateTime } from "@/lib/utils";
 
 const UPLOAD_SUCCESS_MESSAGE = "PDF uploaded and queued for ingestion.";
 const UPLOAD_FLASH_KEY = "document-upload-flash-message";
 
-export function DocumentUploadForm() {
+interface RecentDocument {
+  id: number;
+  title: string;
+  originalFilename: string;
+  status: "uploaded" | "queued" | "processing" | "processed" | "failed";
+  createdAt: string;
+}
+
+export function DocumentUploadForm({
+  recentDocuments = [],
+}: {
+  recentDocuments?: RecentDocument[];
+}) {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -134,6 +147,33 @@ export function DocumentUploadForm() {
             {isSubmitting ? "Uploading..." : "Upload PDF"}
           </Button>
         </form>
+
+        <div className="mt-6 border-t border-border/70 pt-5">
+          <h2 className="text-sm font-medium">Latest uploads</h2>
+          {recentDocuments.length > 0 ? (
+            <div className="mt-3 grid gap-3 md:grid-cols-3">
+              {recentDocuments.map((document) => (
+                <div
+                  className="min-w-0 rounded-md border border-border/80 bg-muted/25 p-3"
+                  key={document.id}
+                >
+                  <p className="truncate text-sm font-medium">{document.title}</p>
+                  <p className="mt-1 truncate text-xs text-muted-foreground">
+                    {document.originalFilename}
+                  </p>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    #{document.id} | {document.status} |{" "}
+                    {formatDateTime(document.createdAt)}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-3 text-sm text-muted-foreground">
+              No documents have been uploaded yet.
+            </p>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
