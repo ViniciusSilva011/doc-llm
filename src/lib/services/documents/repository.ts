@@ -49,6 +49,16 @@ export async function getDocumentById(documentId: number) {
   return document ?? null;
 }
 
+export async function getDocumentForUser(documentId: number, userId: number) {
+  const [document] = await db
+    .select()
+    .from(documents)
+    .where(and(eq(documents.id, documentId), eq(documents.ownerId, userId)))
+    .limit(1);
+
+  return document ?? null;
+}
+
 export async function listDocumentsForUser(userId: number) {
   return db
     .select({

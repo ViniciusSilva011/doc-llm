@@ -1,5 +1,6 @@
 import { requirePageSession } from "@/auth/session";
 import { DocumentUploadForm } from "@/components/documents/document-upload-form";
+import { DocumentTableRow } from "@/components/documents/document-table-row";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -17,7 +18,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { listDocumentsForUser } from "@/lib/services/documents/repository";
-import { formatBytes, formatDateTime } from "@/lib/utils";
 
 export default async function DocumentsPage() {
   const session = await requirePageSession();
@@ -59,26 +59,29 @@ export default async function DocumentsPage() {
                     <TableHead>Status</TableHead>
                     <TableHead>Chunks</TableHead>
                     <TableHead>Updated</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {documents.length > 0 ? (
                     documents.map((document) => (
-                      <TableRow key={document.id}>
-                        <TableCell className="font-medium">{document.title}</TableCell>
-                        <TableCell>{document.originalFilename}</TableCell>
-                        <TableCell className="uppercase text-muted-foreground">
-                          {document.storageBackend}
-                        </TableCell>
-                        <TableCell>{formatBytes(document.byteSize)}</TableCell>
-                        <TableCell>{document.status}</TableCell>
-                        <TableCell>{document.chunkCount}</TableCell>
-                        <TableCell>{formatDateTime(document.updatedAt)}</TableCell>
-                      </TableRow>
+                      <DocumentTableRow
+                        document={{
+                          id: document.id,
+                          title: document.title,
+                          originalFilename: document.originalFilename,
+                          status: document.status,
+                          storageBackend: document.storageBackend,
+                          byteSize: document.byteSize,
+                          chunkCount: document.chunkCount,
+                          updatedAt: document.updatedAt.toISOString(),
+                        }}
+                        key={document.id}
+                      />
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell className="text-muted-foreground" colSpan={7}>
+                      <TableCell className="text-muted-foreground" colSpan={8}>
                         No documents have been submitted yet.
                       </TableCell>
                     </TableRow>

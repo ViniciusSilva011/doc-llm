@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { formatDateTime } from "@/lib/utils";
 
 interface QueryResponse {
   answer: string;
@@ -22,8 +23,21 @@ interface QueryResponse {
   }>;
 }
 
-export function DocumentQueryForm() {
+interface QueryDocumentOption {
+  id: number;
+  title: string;
+  originalFilename: string;
+  status: "uploaded" | "queued" | "processing" | "processed" | "failed";
+  createdAt: string;
+}
+
+export function DocumentQueryForm({
+  documents = [],
+}: {
+  documents?: QueryDocumentOption[];
+}) {
   const [question, setQuestion] = useState("");
+  const [selectedDocumentIds, setSelectedDocumentIds] = useState<number[]>([]);
   const [response, setResponse] = useState<QueryResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -38,7 +52,11 @@ export function DocumentQueryForm() {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ question }),
+      body: JSON.stringify(
+        selectedDocumentIds.length > 0
+          ? { question, documentIds: selectedDocumentIds }
+          : { question },
+      ),
     });
 
     const payload = (await apiResponse.json()) as QueryResponse & { error?: string };
@@ -54,17 +72,65 @@ export function DocumentQueryForm() {
     setResponse(payload);
   }
 
+  function toggleDocument(documentId: number) {
+    setSelectedDocumentIds((current) =>
+      current.includes(documentId)
+        ? current.filter((id) => id !== documentId)
+        : [...current, documentId],
+    );
+  }
+
   return (
     <Card className="border-border/70 bg-card shadow-xl backdrop-blur">
       <CardHeader>
         <CardTitle>Query indexed content</CardTitle>
         <CardDescription>
-          Ask a question and route it through embeddings, pgvector search, and the
-          shared OpenAI service layer.
+          Select PDFs to scope retrieval, or leave everything unselected to query all
+          indexed documents.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <form className="space-y-4" onSubmit={handleSubmit}>
+          {documents.length > 0 ? (
+            <fieldset className="space-y-3">
+              <legend className="text-sm font-medium">PDF scope</legend>
+              <div className="max-h-72 space-y-2 overflow-y-auto rounded-md border border-border/80 bg-muted/20 p-3">
+                {documents.map((document) => {
+                  const isSelected = selectedDocumentIds.includes(document.id);
+
+                  return (
+                    <label
+                      className="flex cursor-pointer items-start gap-3 rounded-md border border-border/60 bg-background/70 p-3 text-sm transition-colors hover:bg-muted/40"
+                      key={document.id}
+                    >
+                      <input
+                        checked={isSelected}
+                        className="mt-1 size-4 accent-primary"
+                        onChange={() => toggleDocument(document.id)}
+                        type="checkbox"
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-medium">
+                          {document.title}
+                        </span>
+                        <span className="block truncate text-muted-foreground">
+                          {document.originalFilename}
+                        </span>
+                        <span className="mt-1 block text-xs text-muted-foreground">
+                          {document.status} | Uploaded {formatDateTime(document.createdAt)}
+                        </span>
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Selected {selectedDocumentIds.length || "all"} PDF
+                {selectedDocumentIds.length === 1 ? "" : "s"}.
+              </p>
+            </fieldset>
+          ) : null}
+
           <Textarea
             value={question}
             onChange={(event) => setQuestion(event.target.value)}

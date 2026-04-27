@@ -30,6 +30,16 @@ test("user uploads a valid pdf and sees it in the documents list", async ({ page
   await expect(row).toBeVisible();
   await expect(row.getByRole("cell", { name: filename })).toBeVisible();
   await expect(row.getByRole("cell", { name: "queued" })).toBeVisible();
+  await expect(row.getByRole("link", { name: "Chat" })).toHaveAttribute(
+    "href",
+    /\/documents\/\d+\/chat$/,
+  );
+
+  await row.click();
+  await expect(page).toHaveURL(/\/documents\/\d+\/chat$/);
+
+  await page.goto("/dashboard");
+  await expect(page.getByText(filename)).toBeVisible();
 });
 
 test("user uploads the public ai_text_full_v2 pdf with a custom title", async ({ page }) => {

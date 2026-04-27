@@ -86,7 +86,15 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        <DocumentQueryForm />
+        <DocumentQueryForm
+          documents={dashboard.documents.map((document) => ({
+            id: document.id,
+            title: document.title,
+            originalFilename: document.originalFilename,
+            status: document.status,
+            createdAt: document.createdAt.toISOString(),
+          }))}
+        />
       </section>
     </div>
   );

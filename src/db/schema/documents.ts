@@ -31,6 +31,11 @@ export const ingestionJobStatusEnum = pgEnum("ingestion_job_status", [
   "failed",
 ]);
 
+export const documentChatRoleEnum = pgEnum("document_chat_role", [
+  "user",
+  "assistant",
+]);
+
 export const documents = pgTable(
   "documents",
   {
@@ -139,5 +144,36 @@ export const ingestionJobs = pgTable(
   (table) => ({
     statusIndex: index("ingestion_jobs_status_idx").on(table.status),
     documentIndex: index("ingestion_jobs_document_id_idx").on(table.documentId),
+  }),
+);
+
+export const documentChatMessages = pgTable(
+  "document_chat_messages",
+  {
+    id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
+    documentId: integer("document_id")
+      .notNull()
+      .references(() => documents.id, { onDelete: "cascade" }),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    role: documentChatRoleEnum("role").notNull(),
+    content: text("content").notNull(),
+    createdAt: timestamp("created_at", {
+      mode: "date",
+      withTimezone: true,
+    })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    documentCreatedAtIndex: index("document_chat_messages_document_created_at_idx").on(
+      table.documentId,
+      table.createdAt,
+    ),
+    userDocumentIndex: index("document_chat_messages_user_document_idx").on(
+      table.userId,
+      table.documentId,
+    ),
   }),
 );

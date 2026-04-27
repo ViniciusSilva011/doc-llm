@@ -13,7 +13,14 @@ if (!appUrl) {
 }
 
 const appPort = new URL(appUrl).port || "3100";
-const reuseExistingServer = process.env.PLAYWRIGHT_REUSE_SERVER !== "false";
+const reuseExistingServer = process.env.PLAYWRIGHT_REUSE_SERVER === "true";
+const databaseUrl = process.env.TEST_DATABASE_URL ?? process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+  throw new Error(
+    "Set TEST_DATABASE_URL or DATABASE_URL in .env before running Playwright.",
+  );
+}
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -25,11 +32,12 @@ export default defineConfig({
     trace: "on-first-retry",
   },
   webServer: {
-    command: `npm run db:migrate && npm run db:seed && npm run dev -- --hostname localhost --port ${appPort}`,
+    command: `tsx tests/e2e/setup-db.ts && npm run dev -- --hostname localhost --port ${appPort}`,
     url: appUrl,
     env: {
       ...process.env,
       APP_URL: appUrl,
+      DATABASE_URL: databaseUrl,
       // Keep auth callbacks on the same host as the Playwright browser context.
       NEXTAUTH_URL: appUrl,
       PLAYWRIGHT_REUSE_SERVER:
