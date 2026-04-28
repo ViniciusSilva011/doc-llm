@@ -1,4 +1,5 @@
 import { DEFAULT_EMBEDDING_DIMENSION } from "@/lib/constants";
+import { env } from "@/lib/env";
 import { OpenAIService } from "@/lib/services/openai/service";
 
 describe("OpenAIService", () => {
@@ -81,7 +82,7 @@ describe("OpenAIService", () => {
       service.generateText({ input: "question", instructions: "be concise" }),
     ).resolves.toBe("Generated answer");
     expect(create).toHaveBeenCalledWith({
-      model: "openai/gpt-5-mini",
+      model: env.OPENROUTER_MODEL,
       messages: [
         {
           role: "system",

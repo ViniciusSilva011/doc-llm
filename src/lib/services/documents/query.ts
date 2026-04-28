@@ -125,9 +125,6 @@ export async function generateAnswerFromDocuments(input: {
     )
     .join("\n\n");
 
-  console.log("context: ", context);
-  console.log("matches: ", matches);
-
   const answer = await openAI.generateText({
     instructions:
       "Answer only from the supplied document context. If the context is insufficient, say so clearly.",
