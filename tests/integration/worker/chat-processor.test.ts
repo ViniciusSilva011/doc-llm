@@ -74,7 +74,7 @@ describe("DocumentChatJobProcessor", () => {
         }),
         sleep: vi.fn().mockResolvedValue(undefined),
         pollIntervalMs: 10,
-        logger: { error: vi.fn() },
+        logger: { info: vi.fn(), error: vi.fn() },
       }),
     ).resolves.toEqual({ status: "processed", jobId: job.id });
 
@@ -146,7 +146,7 @@ describe("DocumentChatJobProcessor", () => {
         }),
         sleep: vi.fn().mockResolvedValue(undefined),
         pollIntervalMs: 10,
-        logger: { error: vi.fn() },
+        logger: { info: vi.fn(), error: vi.fn() },
       }),
     ).resolves.toEqual({
       status: "failed",

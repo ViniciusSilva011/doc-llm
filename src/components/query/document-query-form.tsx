@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 
+import { DocumentStatusIcon } from "@/components/documents/document-status-icon";
 import {
   Card,
   CardContent,
@@ -11,7 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { formatDateTime } from "@/lib/utils";
+import { formatDateTime, formatFileType } from "@/lib/utils";
 
 interface QueryResponse {
   answer: string;
@@ -27,6 +28,7 @@ interface QueryDocumentOption {
   id: number;
   title: string;
   originalFilename: string;
+  contentType: string;
   status: "uploaded" | "queued" | "processing" | "processed" | "failed";
   createdAt: string;
 }
@@ -114,10 +116,11 @@ export function DocumentQueryForm({
                           {document.title}
                         </span>
                         <span className="block truncate text-muted-foreground">
-                          {document.originalFilename}
+                          {formatFileType(document)}
                         </span>
-                        <span className="mt-1 block text-xs text-muted-foreground">
-                          {document.status} | Uploaded {formatDateTime(document.createdAt)}
+                        <span className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                          <DocumentStatusIcon status={document.status} />
+                          <span>Uploaded {formatDateTime(document.createdAt)}</span>
                         </span>
                       </span>
                     </label>

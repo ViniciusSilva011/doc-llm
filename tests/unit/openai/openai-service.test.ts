@@ -21,11 +21,19 @@ describe("OpenAIService", () => {
           output_text: "Hello world",
         }),
       },
+      chat: {
+        completions: {
+          create: async () => ({
+            choices: [{ message: { content: "Hello world" } }],
+          }),
+        },
+      },
     };
 
     const service = new OpenAIService({
       embedding: client,
-      generation: client,
+      openAI: client,
+      openRouter: client,
     } as never);
 
     const embeddings = await service.createEmbeddings(["hello"]);
@@ -34,7 +42,10 @@ describe("OpenAIService", () => {
     expect(embeddings[0]).toHaveLength(DEFAULT_EMBEDDING_DIMENSION);
   });
 
-  it("returns trimmed generated text", async () => {
+  it("sends OpenRouter chat completion requests and returns trimmed generated text", async () => {
+    const create = vi.fn(async () => ({
+      choices: [{ message: { content: "  Generated answer  " } }],
+    }));
     const client = {
       embeddings: {
         create: async () => ({
@@ -53,15 +64,73 @@ describe("OpenAIService", () => {
           output_text: "  Generated answer  ",
         }),
       },
+      chat: {
+        completions: {
+          create,
+        },
+      },
     };
 
     const service = new OpenAIService({
       embedding: client,
-      generation: client,
+      openAI: client,
+      openRouter: client,
     } as never);
 
     await expect(
       service.generateText({ input: "question", instructions: "be concise" }),
     ).resolves.toBe("Generated answer");
+    expect(create).toHaveBeenCalledWith({
+      model: "openai/gpt-5-mini",
+      messages: [
+        {
+          role: "system",
+          content: "be concise",
+        },
+        {
+          role: "user",
+          content: "question",
+        },
+      ],
+    });
+  });
+
+  it("fails clearly when OpenRouter returns no assistant content", async () => {
+    const client = {
+      embeddings: {
+        create: async () => ({
+          data: [
+            {
+              embedding: Array.from(
+                { length: DEFAULT_EMBEDDING_DIMENSION },
+                () => 0.1,
+              ),
+            },
+          ],
+        }),
+      },
+      responses: {
+        create: async () => ({
+          output_text: "Generated answer",
+        }),
+      },
+      chat: {
+        completions: {
+          create: async () => ({
+            choices: [{ message: { content: "   " } }],
+          }),
+        },
+      },
+    };
+
+    const service = new OpenAIService({
+      embedding: client,
+      openAI: client,
+      openRouter: client,
+    } as never);
+
+    await expect(
+      service.generateText({ input: "question" }),
+    ).rejects.toThrow("OpenRouter returned an empty assistant response.");
   });
 });

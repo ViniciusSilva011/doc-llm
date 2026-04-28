@@ -36,6 +36,13 @@
       "when": 1760004000000,
       "tag": "0004_document_chat_jobs",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1760005000000,
+      "tag": "0005_unique_document_titles",
+      "breakpoints": true
     }
   ]
 }

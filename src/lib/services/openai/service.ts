@@ -5,11 +5,13 @@ import { env } from "@/lib/env";
 import {
   createEmbeddingClient,
   createOpenAIClient,
+  createOpenRouterClient,
 } from "@/lib/services/openai/client";
 
 type OpenAIServiceClients = {
   embedding: Pick<OpenAI, "embeddings">;
-  generation: Pick<OpenAI, "responses">;
+  openAI?: Pick<OpenAI, "responses">;
+  openRouter?: Pick<OpenAI, "chat">;
 };
 
 export class OpenAIService {
@@ -40,6 +42,21 @@ export class OpenAIService {
     instructions?: string;
     input: string;
   }): Promise<string> {
+    if (env.LLM_PROVIDER === "openrouter") {
+      return this.generateOpenRouterText(params);
+    }
+
+    return this.generateOpenAIText(params);
+  }
+
+  private async generateOpenAIText(params: {
+    instructions?: string;
+    input: string;
+  }): Promise<string> {
+    if (!env.OPENAI_GENERATION_MODEL) {
+      throw new Error("OpenAI generation is not configured.");
+    }
+
     const request: {
       model: string;
       input: string;
@@ -53,9 +70,49 @@ export class OpenAIService {
       request.instructions = params.instructions;
     }
 
-    const response = await this.clients.generation.responses.create(request);
+    const client = this.clients.openAI ?? createOpenAIClient();
+    const response = await client.responses.create(request);
 
     return response.output_text.trim();
+  }
+
+  private async generateOpenRouterText(params: {
+    instructions?: string;
+    input: string;
+  }): Promise<string> {
+    const messages: Array<{
+      role: "system" | "user";
+      content: string;
+    }> = [];
+
+    if (params.instructions) {
+      messages.push({
+        role: "system",
+        content: params.instructions,
+      });
+    }
+
+    messages.push({
+      role: "user",
+      content: params.input,
+    });
+
+    if (!env.OPENROUTER_MODEL) {
+      throw new Error("OpenRouter generation is not configured.");
+    }
+
+    const client = this.clients.openRouter ?? createOpenRouterClient();
+    const response = await client.chat.completions.create({
+      model: env.OPENROUTER_MODEL,
+      messages,
+    });
+    const content = response.choices[0]?.message.content;
+
+    if (typeof content !== "string" || content.trim().length === 0) {
+      throw new Error("OpenRouter returned an empty assistant response.");
+    }
+
+    return content.trim();
   }
 }
 
@@ -63,10 +120,17 @@ let openAIService: OpenAIService | undefined;
 
 export function createOpenAIService(): OpenAIService {
   if (!openAIService) {
-    openAIService = new OpenAIService({
+    const clients: OpenAIServiceClients = {
       embedding: createEmbeddingClient(),
-      generation: createOpenAIClient(),
-    });
+    };
+
+    if (env.LLM_PROVIDER === "openrouter") {
+      clients.openRouter = createOpenRouterClient();
+    } else {
+      clients.openAI = createOpenAIClient();
+    }
+
+    openAIService = new OpenAIService(clients);
   }
 
   return openAIService;

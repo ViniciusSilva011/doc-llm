@@ -31,18 +31,27 @@ export async function AppHeader() {
             Home
           </Link>
           {session?.user ? (
-            <Link className="transition-colors hover:text-foreground" href="/dashboard">
+            <Link
+              className="transition-colors hover:text-foreground"
+              href="/dashboard"
+            >
               Dashboard
             </Link>
           ) : null}
           {session?.user ? (
-            <Link className="transition-colors hover:text-foreground" href="/upload">
+            <Link
+              className="transition-colors hover:text-foreground"
+              href="/upload"
+            >
               Upload
             </Link>
           ) : null}
           {session?.user ? (
-            <Link className="transition-colors hover:text-foreground" href="/query">
-              Query
+            <Link
+              className="transition-colors hover:text-foreground"
+              href="/documents"
+            >
+              Documents
             </Link>
           ) : null}
         </nav>
@@ -50,7 +59,9 @@ export async function AppHeader() {
         <div className="flex items-center gap-3">
           {session?.user ? (
             <>
-              <span className="text-sm text-muted-foreground">{session.user.email}</span>
+              <span className="text-sm text-muted-foreground">
+                {session.user.email}
+              </span>
               <SignOutButton />
             </>
           ) : (

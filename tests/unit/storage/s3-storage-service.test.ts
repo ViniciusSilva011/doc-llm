@@ -5,16 +5,7 @@ import { vi } from "vitest";
 import { StorageObjectNotFoundError } from "@/server/storage/errors";
 import { S3ObjectStorageService } from "@/server/storage/s3-storage-service";
 
-const requiredAwsEnvNames = [
-  "AWS_REGION",
-  "AWS_S3_BUCKET",
-  "AWS_ACCESS_KEY_ID",
-  "AWS_SECRET_ACCESS_KEY",
-] as const;
-const hasRequiredAwsEnv = requiredAwsEnvNames.every((name) => process.env[name]?.trim());
-const describeAws = hasRequiredAwsEnv ? describe : describe.skip;
-
-describeAws("S3ObjectStorageService", () => {
+describe("S3ObjectStorageService", () => {
   it("stores objects with the expected bucket, key, and content type", async () => {
     const send = vi.fn().mockResolvedValue({});
     const service = new S3ObjectStorageService(
@@ -49,7 +40,8 @@ describeAws("S3ObjectStorageService", () => {
   it("reads objects back as buffers", async () => {
     const send = vi.fn().mockResolvedValue({
       Body: {
-        transformToByteArray: async () => Uint8Array.from(Buffer.from("pdf-bytes", "utf8")),
+        transformToByteArray: async () =>
+          Uint8Array.from(Buffer.from("pdf-bytes", "utf8")),
       },
     });
     const service = new S3ObjectStorageService(
@@ -98,7 +90,10 @@ describeAws("S3ObjectStorageService", () => {
   it("deletes objects and reports missing objects clearly", async () => {
     const send = vi
       .fn()
-      .mockRejectedValueOnce({ name: "NotFound", $metadata: { httpStatusCode: 404 } })
+      .mockRejectedValueOnce({
+        name: "NotFound",
+        $metadata: { httpStatusCode: 404 },
+      })
       .mockResolvedValueOnce({});
     const service = new S3ObjectStorageService(
       {
@@ -117,6 +112,34 @@ describeAws("S3ObjectStorageService", () => {
     );
 
     await service.deleteObject("documents/user-1/report.pdf");
+
+    expect(send).toHaveBeenCalledTimes(2);
+  });
+
+  it("checks object existence without using a live bucket", async () => {
+    const send = vi
+      .fn()
+      .mockResolvedValueOnce({})
+      .mockRejectedValueOnce({
+        name: "NotFound",
+        $metadata: { httpStatusCode: 404 },
+      });
+    const service = new S3ObjectStorageService(
+      {
+        backend: "s3",
+        bucket: "doc-llm",
+        region: "eu-west-2",
+        accessKeyId: "key",
+        secretAccessKey: "secret",
+        forcePathStyle: false,
+      },
+      { send } as never,
+    );
+
+    await expect(service.exists("documents/user-1/report.pdf")).resolves.toBe(
+      true,
+    );
+    await expect(service.exists("missing.pdf")).resolves.toBe(false);
 
     expect(send).toHaveBeenCalledTimes(2);
   });

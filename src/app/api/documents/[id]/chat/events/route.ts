@@ -20,6 +20,14 @@ function encodeSseEvent(eventName: string, data: unknown) {
   return `event: ${eventName}\ndata: ${JSON.stringify(data)}\n\n`;
 }
 
+function isControllerAlreadyClosedError(error: unknown) {
+  return (
+    error instanceof TypeError &&
+    ((error as { code?: string }).code === "ERR_INVALID_STATE" ||
+      error.message.includes("Controller is already closed"))
+  );
+}
+
 export async function GET(
   request: Request,
   context: { params: Promise<{ id: string }> },
@@ -40,14 +48,28 @@ export async function GET(
     }
 
     const encoder = new TextEncoder();
+    let closeStream: (() => Promise<void>) | undefined;
+    let closeRequested = false;
 
     const stream = new ReadableStream<Uint8Array>({
       async start(controller) {
         let closed = false;
+        let heartbeat: ReturnType<typeof setInterval> | undefined;
+        let removeAbortListener = () => {};
 
         function enqueue(value: string) {
           if (!closed) {
             controller.enqueue(encoder.encode(value));
+          }
+        }
+
+        function closeController() {
+          try {
+            controller.close();
+          } catch (error) {
+            if (!isControllerAlreadyClosedError(error)) {
+              throw error;
+            }
           }
         }
 
@@ -61,24 +83,53 @@ export async function GET(
           },
         );
 
-        const heartbeat = setInterval(() => {
-          enqueue(": keepalive\n\n");
-        }, 25_000);
-
         async function close() {
           if (closed) {
             return;
           }
 
           closed = true;
-          clearInterval(heartbeat);
-          request.signal.removeEventListener("abort", close);
-          await subscription.close();
-          controller.close();
+          closeRequested = true;
+          removeAbortListener();
+
+          if (heartbeat) {
+            clearInterval(heartbeat);
+          }
+
+          try {
+            await subscription.close();
+          } finally {
+            closeController();
+          }
         }
 
-        request.signal.addEventListener("abort", close);
+        closeStream = close;
+
+        function handleAbort() {
+          void close().catch((error: unknown) => {
+            console.error("Failed to close document chat event stream.", error);
+          });
+        }
+
+        request.signal.addEventListener("abort", handleAbort);
+        removeAbortListener = () => {
+          request.signal.removeEventListener("abort", handleAbort);
+        };
+
+        if (closeRequested || request.signal.aborted) {
+          await close();
+          return;
+        }
+
+        heartbeat = setInterval(() => {
+          enqueue(": keepalive\n\n");
+        }, 25_000);
+
         enqueue(encodeSseEvent("chat.connected", { documentId: document.id }));
+      },
+      cancel() {
+        closeRequested = true;
+        return closeStream?.();
       },
     });
 

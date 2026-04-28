@@ -31,59 +31,97 @@ const rawEnv = {
     String(DEFAULT_MAX_UPLOAD_SIZE_BYTES),
 };
 
-const envSchema = z.object({
-  NODE_ENV: z
-    .enum(["development", "test", "production"])
-    .default("development"),
-  APP_URL: z.string().url(),
-  DATABASE_URL: z.string().min(1),
-  TEST_DATABASE_URL: z.string().min(1).optional(),
-  NEXTAUTH_SECRET: z.string().min(1),
-  NEXTAUTH_URL: z.string().url(),
-  OPENAI_API_KEY: z.string().min(1),
-  OPENAI_BASE_URL: optionalEnvString(z.string().url()),
-  OPENAI_GENERATION_MODEL: z.string().min(1),
-  EMBEDDING_API_KEY: z.string().min(1).default("ollama"),
-  EMBEDDING_BASE_URL: z.string().url().default("http://127.0.0.1:11434/v1"),
-  EMBEDDING_MODEL: z.string().min(1).default("nomic-embed-text"),
-  EMBEDDING_DIMENSION: z.coerce
-    .number()
-    .int()
-    .positive()
-    .default(DEFAULT_EMBEDDING_DIMENSION)
-    .refine((value) => value === DEFAULT_EMBEDDING_DIMENSION, {
-      message: `This starter expects ${DEFAULT_EMBEDDING_DIMENSION}-dimension embeddings. Update the schema and migrations before changing it.`,
-    }),
-  STORAGE_BACKEND: z.enum(["local", "s3"]).default("local"),
-  STORAGE_LOCAL_DIR: z.string().min(1),
-  STORAGE_MAX_UPLOAD_SIZE_BYTES: z.coerce
-    .number()
-    .int()
-    .positive()
-    .default(DEFAULT_MAX_UPLOAD_SIZE_BYTES),
-  AWS_REGION: optionalEnvString(z.string().min(1)),
-  AWS_S3_BUCKET: optionalEnvString(z.string().min(1)),
-  AWS_ACCESS_KEY_ID: optionalEnvString(z.string().min(1)),
-  AWS_SECRET_ACCESS_KEY: optionalEnvString(z.string().min(1)),
-  AWS_S3_ENDPOINT: optionalEnvString(z.string().url()),
-  AWS_S3_FORCE_PATH_STYLE: booleanStringSchema.optional().default(false),
-  AWS_S3_PREFIX: optionalEnvString(z.string()),
-  WORKER_POLL_INTERVAL_MS: z.coerce.number().int().positive().default(5000),
-  INGESTION_MAX_CHUNK_SIZE: z.coerce.number().int().positive().default(1200),
-  INGESTION_CHUNK_OVERLAP_PERCENT: z.coerce
-    .number()
-    .int()
-    .min(0)
-    .max(90)
-    .default(20),
-  INGESTION_QUERY_MATCH_LIMIT: z.coerce
-    .number()
-    .int()
-    .positive()
-    .default(DEFAULT_INGESTION_QUERY_MATCH_LIMIT),
-  DEMO_USER_EMAIL: z.string().email(),
-  DEMO_USER_PASSWORD: z.string().min(8),
-});
+const envSchema = z
+  .object({
+    NODE_ENV: z
+      .enum(["development", "test", "production"])
+      .default("development"),
+    APP_URL: z.string().url(),
+    DATABASE_URL: z.string().min(1),
+    TEST_DATABASE_URL: z.string().min(1).optional(),
+    NEXTAUTH_SECRET: z.string().min(1),
+    NEXTAUTH_URL: z.string().url(),
+    LLM_PROVIDER: z.enum(["openrouter", "openai"]).default("openrouter"),
+    OPENAI_API_KEY: optionalEnvString(z.string().min(1)),
+    OPENAI_BASE_URL: optionalEnvString(z.string().url()),
+    OPENAI_GENERATION_MODEL: optionalEnvString(z.string().min(1)),
+    OPENROUTER_API_KEY: optionalEnvString(z.string().min(1)),
+    OPENROUTER_BASE_URL: z
+      .string()
+      .url()
+      .default("https://openrouter.ai/api/v1"),
+    OPENROUTER_MODEL: optionalEnvString(z.string().min(1)),
+    EMBEDDING_API_KEY: z.string().min(1).default("ollama"),
+    EMBEDDING_BASE_URL: z.string().url().default("http://127.0.0.1:11434/v1"),
+    EMBEDDING_MODEL: z.string().min(1).default("nomic-embed-text"),
+    EMBEDDING_DIMENSION: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(DEFAULT_EMBEDDING_DIMENSION)
+      .refine((value) => value === DEFAULT_EMBEDDING_DIMENSION, {
+        message: `This starter expects ${DEFAULT_EMBEDDING_DIMENSION}-dimension embeddings. Update the schema and migrations before changing it.`,
+      }),
+    STORAGE_BACKEND: z.enum(["local", "s3"]).default("local"),
+    STORAGE_LOCAL_DIR: z.string().min(1),
+    STORAGE_MAX_UPLOAD_SIZE_BYTES: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(DEFAULT_MAX_UPLOAD_SIZE_BYTES),
+    AWS_REGION: optionalEnvString(z.string().min(1)),
+    AWS_S3_BUCKET: optionalEnvString(z.string().min(1)),
+    AWS_ACCESS_KEY_ID: optionalEnvString(z.string().min(1)),
+    AWS_SECRET_ACCESS_KEY: optionalEnvString(z.string().min(1)),
+    AWS_S3_ENDPOINT: optionalEnvString(z.string().url()),
+    AWS_S3_FORCE_PATH_STYLE: booleanStringSchema.optional().default(false),
+    AWS_S3_PREFIX: optionalEnvString(z.string()),
+    WORKER_POLL_INTERVAL_MS: z.coerce.number().int().positive().default(5000),
+    INGESTION_MAX_CHUNK_SIZE: z.coerce.number().int().positive().default(1200),
+    INGESTION_CHUNK_OVERLAP_PERCENT: z.coerce
+      .number()
+      .int()
+      .min(0)
+      .max(90)
+      .default(20),
+    INGESTION_QUERY_MATCH_LIMIT: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(DEFAULT_INGESTION_QUERY_MATCH_LIMIT),
+    DEMO_USER_EMAIL: z.string().email(),
+    DEMO_USER_PASSWORD: z.string().min(8),
+  })
+  .superRefine((value, context) => {
+    if (value.LLM_PROVIDER === "openrouter") {
+      requireProviderEnv(context, "OPENROUTER_API_KEY", value.OPENROUTER_API_KEY);
+      requireProviderEnv(context, "OPENROUTER_MODEL", value.OPENROUTER_MODEL);
+      return;
+    }
+
+    requireProviderEnv(context, "OPENAI_API_KEY", value.OPENAI_API_KEY);
+    requireProviderEnv(
+      context,
+      "OPENAI_GENERATION_MODEL",
+      value.OPENAI_GENERATION_MODEL,
+    );
+  });
+
+function requireProviderEnv(
+  context: z.RefinementCtx,
+  name: string,
+  value: string | undefined,
+) {
+  if (value) {
+    return;
+  }
+
+  context.addIssue({
+    code: z.ZodIssueCode.custom,
+    path: [name],
+    message: `${name} is required for the selected LLM provider.`,
+  });
+}
 
 const parsed = envSchema.safeParse(rawEnv);
 

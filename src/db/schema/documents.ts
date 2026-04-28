@@ -10,6 +10,7 @@ import {
   varchar,
   vector,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 import { DEFAULT_EMBEDDING_DIMENSION } from "@/lib/constants";
 import { users } from "@/db/schema/auth";
@@ -80,6 +81,10 @@ export const documents = pgTable(
     ownerIndex: index("documents_owner_id_idx").on(table.ownerId),
     statusIndex: index("documents_status_idx").on(table.status),
     storageBackendIndex: index("documents_storage_backend_idx").on(table.storageBackend),
+    ownerTitleUniqueIndex: uniqueIndex("documents_owner_id_lower_title_unique_idx").on(
+      table.ownerId,
+      sql`lower(${table.title})`,
+    ),
   }),
 );
 

@@ -22,8 +22,13 @@
     "test": "npm run test:unit && npm run test:integration",
     "test:unit": "vitest run --config vitest.unit.config.ts",
     "test:integration": "vitest run --config vitest.integration.config.ts",
+    "test:llm:connection": "tsx scripts/check-llm-connection.ts",
+    "test:openrouter:connection": "tsx scripts/check-openrouter-connection.ts",
+    "test:embedding:connection": "tsx scripts/check-embedding-connection.ts",
+    "test:s3:connection": "tsx scripts/check-s3-connection.ts",
+    "test:live": "npm run test:llm:connection && npm run test:embedding:connection && npm run test:s3:connection && npm run test:openrouter:connection",
     "test:watch": "vitest",
-    "test:e2e": "playwright test",
+    "test:e2e": "PLAYWRIGHT_REUSE_SERVER=true playwright test",
     "ci": "npm run lint && npm run typecheck && npm run test"
   },
   "dependencies": {

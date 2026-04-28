@@ -72,12 +72,10 @@ export default async function DashboardPage() {
                   <TableRow>
                     <TableHead>ID</TableHead>
                     <TableHead>Title</TableHead>
-                    <TableHead>Filename</TableHead>
-                    <TableHead>Backend</TableHead>
+                    <TableHead>File type</TableHead>
                     <TableHead>Size</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Chunks</TableHead>
                     <TableHead>Updated At</TableHead>
+                    <TableHead className="text-center">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -88,10 +86,9 @@ export default async function DashboardPage() {
                           id: document.id,
                           title: document.title,
                           originalFilename: document.originalFilename,
+                          contentType: document.contentType,
                           status: document.status,
-                          storageBackend: document.storageBackend,
                           byteSize: document.byteSize,
-                          chunkCount: document.chunkCount,
                           updatedAt: document.updatedAt.toISOString(),
                         }}
                         key={document.id}
@@ -99,7 +96,7 @@ export default async function DashboardPage() {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell className="text-muted-foreground" colSpan={8}>
+                      <TableCell className="text-muted-foreground" colSpan={6}>
                         No documents have been submitted yet.
                       </TableCell>
                     </TableRow>

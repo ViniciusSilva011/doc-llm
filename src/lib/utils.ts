@@ -83,6 +83,37 @@ export function formatBytes(value: number): string {
   return `${size.toFixed(size >= 10 ? 0 : 1)} ${units[unitIndex]}`;
 }
 
+export function formatFileType(input: {
+  contentType?: string | null;
+  originalFilename?: string | null;
+}): string {
+  const normalizedContentType = input.contentType?.split(";")[0]?.trim().toLowerCase();
+  const commonContentTypes: Record<string, string> = {
+    "application/json": "JSON",
+    "application/pdf": "PDF",
+    "text/markdown": "MD",
+    "text/plain": "TXT",
+  };
+
+  if (normalizedContentType && commonContentTypes[normalizedContentType]) {
+    return commonContentTypes[normalizedContentType];
+  }
+
+  const subtype = normalizedContentType?.split("/")[1]?.trim();
+
+  if (subtype) {
+    return subtype.toUpperCase();
+  }
+
+  const extension = input.originalFilename?.split(".").pop()?.trim();
+
+  if (extension && extension !== input.originalFilename) {
+    return extension.toUpperCase();
+  }
+
+  return "Unknown";
+}
+
 export function sleep(milliseconds: number): Promise<void> {
   return new Promise((resolve) => {
     setTimeout(resolve, milliseconds);

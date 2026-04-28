@@ -8,6 +8,7 @@ export interface WorkerProcessor<TJob extends WorkerJob = WorkerJob> {
 }
 
 export interface WorkerLogger {
+  info(message?: unknown, ...optionalParams: unknown[]): void;
   error(message?: unknown, ...optionalParams: unknown[]): void;
 }
 
@@ -35,6 +36,9 @@ export async function runWorkerIteration<TJob extends WorkerJob>(
 
   try {
     await dependencies.processor.process(job);
+    (dependencies.logger ?? console).info(
+      `Processed document ${job.documentId} for job ${job.id}.`,
+    );
     return { status: "processed", jobId: job.id };
   } catch (error) {
     (dependencies.logger ?? console).error(`Job ${job.id} failed.`, error);

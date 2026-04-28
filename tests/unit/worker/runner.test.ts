@@ -9,6 +9,10 @@ describe("worker runner", () => {
       process: vi.fn(),
     };
     const sleep = vi.fn().mockResolvedValue(undefined);
+    const logger = {
+      info: vi.fn(),
+      error: vi.fn(),
+    };
 
     await expect(
       runWorkerIteration({
@@ -16,12 +20,14 @@ describe("worker runner", () => {
         processor,
         sleep,
         pollIntervalMs: 25,
+        logger,
       }),
     ).resolves.toEqual({ status: "idle" });
 
     expect(claimNextPendingJob).toHaveBeenCalledTimes(1);
     expect(processor.process).not.toHaveBeenCalled();
     expect(sleep).toHaveBeenCalledWith(25);
+    expect(logger.info).not.toHaveBeenCalled();
   });
 
   it("processes a claimed job", async () => {
@@ -33,6 +39,10 @@ describe("worker runner", () => {
       process: vi.fn().mockResolvedValue(undefined),
     };
     const sleep = vi.fn().mockResolvedValue(undefined);
+    const logger = {
+      info: vi.fn(),
+      error: vi.fn(),
+    };
 
     await expect(
       runWorkerIteration({
@@ -40,6 +50,7 @@ describe("worker runner", () => {
         processor,
         sleep,
         pollIntervalMs: 25,
+        logger,
       }),
     ).resolves.toEqual({ status: "processed", jobId: 20 });
 
@@ -47,6 +58,9 @@ describe("worker runner", () => {
       id: 20,
       documentId: 10,
     });
+    expect(logger.info).toHaveBeenCalledWith(
+      "Processed document 10 for job 20.",
+    );
     expect(sleep).not.toHaveBeenCalled();
   });
 
@@ -61,6 +75,7 @@ describe("worker runner", () => {
     };
     const sleep = vi.fn().mockResolvedValue(undefined);
     const logger = {
+      info: vi.fn(),
       error: vi.fn(),
     };
 
@@ -75,6 +90,7 @@ describe("worker runner", () => {
     ).resolves.toEqual({ status: "failed", jobId: 20, error });
 
     expect(logger.error).toHaveBeenCalledWith("Job 20 failed.", error);
+    expect(logger.info).not.toHaveBeenCalled();
     expect(sleep).not.toHaveBeenCalled();
   });
 

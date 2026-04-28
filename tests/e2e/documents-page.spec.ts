@@ -7,7 +7,7 @@ test("authenticated user can open the upload page", async ({ page }) => {
   await page.goto("/upload");
 
   await expect(page).toHaveURL(/\/upload$/);
-  await expect(page.getByRole("heading", { name: "Upload PDF documents for ingestion." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Upload PDF" })).toBeVisible();
   await expect(page.getByLabel("PDF file")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Latest uploads" })).toBeVisible();
 });

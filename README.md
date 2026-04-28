@@ -21,7 +21,7 @@ Today, it gives you:
 - PDF upload with authenticated route handling and storage-backed document records
 - a background worker that processes pending ingestion jobs
 - pgvector-backed chunk storage for semantic retrieval
-- an OpenAI-compatible service layer using Ollama embeddings and OpenAI text generation
+- an OpenAI-compatible service layer using Ollama embeddings and OpenRouter text generation
 
 # How To Load Up The App
 
@@ -43,6 +43,17 @@ Ollama is running locally and the model is available:
 ```bash
 ollama pull nomic-embed-text
 ```
+
+Text generation defaults to OpenRouter. Set these values in `.env`:
+
+```bash
+LLM_PROVIDER=openrouter
+OPENROUTER_API_KEY=your-openrouter-key
+OPENROUTER_MODEL=openai/gpt-5-mini
+```
+
+To use OpenAI directly instead, set `LLM_PROVIDER=openai` and configure `OPENAI_API_KEY` plus
+`OPENAI_GENERATION_MODEL`.
 
 ## 3. Start PostgreSQL with pgvector
 
@@ -132,6 +143,22 @@ These are the safest checks to run first and currently pass in the project:
 ```bash
 npm run test:unit
 ```
+
+## Live connection checks
+
+These send small live requests to configured external services and fail if connection, auth,
+routing, or response parsing fails:
+
+```bash
+npm run test:llm:connection
+npm run test:openrouter:connection
+npm run test:embedding:connection
+npm run test:s3:connection
+npm run test:live
+```
+
+`test:llm:connection` checks the app's configured generation provider. `test:openrouter:connection`
+checks OpenRouter directly. `test:live` runs all live connection checks in sequence.
 
 ## Integration tests
 
