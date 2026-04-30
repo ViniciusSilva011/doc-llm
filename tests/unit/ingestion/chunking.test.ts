@@ -45,6 +45,25 @@ describe("chunkText", () => {
     expect(chunks[0]?.metadata.sentenceCount).toBe(4);
   });
 
+  it("normalizes horizontal whitespace while preserving paragraph breaks", () => {
+    const content = [
+      "Alpha\t\tbeta   gamma.",
+      "",
+      "Delta\f\v epsilon.",
+    ].join("\n");
+
+    const chunks = chunkText(content, {
+      maxCharacters: 180,
+      overlapPercent: 0,
+    });
+
+    expect(chunks).toHaveLength(1);
+    expect(chunks[0]?.content).toBe(
+      "Alpha beta gamma.\n\nDelta epsilon.",
+    );
+    expect(chunks[0]?.content).not.toContain("\t");
+  });
+
   it("hard splits oversized sentences", () => {
     const content = `${"A".repeat(180)}. Short closing sentence.`;
 

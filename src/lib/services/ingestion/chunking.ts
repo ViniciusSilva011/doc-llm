@@ -17,7 +17,10 @@ interface ParagraphUnit {
 }
 
 function normalizeContent(content: string) {
-  return content.replace(/\r\n/g, "\n").trim();
+  return content
+    .replace(/\r\n/g, "\n")
+    .replace(/[\t\f\v ]+/g, " ")
+    .trim();
 }
 
 function splitParagraphs(content: string): ParagraphUnit[] {

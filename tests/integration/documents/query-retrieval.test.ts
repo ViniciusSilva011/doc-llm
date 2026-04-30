@@ -22,7 +22,13 @@ const pdfStorageKey = "documents/test/ai_text_full_v2.pdf";
 function createPdfStorage(pdfBuffer: Buffer): ObjectStorageService {
   return {
     backend: "local",
-    putObject: async ({ body, contentType, originalFilename, key, checksum }) => ({
+    putObject: async ({
+      body,
+      contentType,
+      originalFilename,
+      key,
+      checksum,
+    }) => ({
       backend: "local",
       key,
       originalFilename,
@@ -63,7 +69,7 @@ async function ingestPdfFixtureForSeededUser() {
     openAI: createOpenAIService(),
     storage: createPdfStorage(pdfBuffer),
   });
-  console.log('document.id: ', document.id)
+
   const result = await processor.process({
     id: job.id,
     documentId: document.id,
@@ -113,8 +119,7 @@ describe("embedding chunk retrieval integration", () => {
       question,
       documentIds: [document.id],
     });
-    console.log('matches: ', matches)
-    console.log('matches.length: ', matches.length)
+
     expect(matches.length).toBeGreaterThan(0);
     expect(matches[0]?.documentId).toBe(document.id);
     expect(matches[0]?.content.toLowerCase()).toContain("supply-chain");

@@ -17,7 +17,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/scripts/migrate.ts",
     "db:seed": "tsx src/db/scripts/seed.ts",
-    "worker": "tsx src/worker/index.ts",
+    "worker": "bash -o pipefail -c 'mkdir -p logs && tsx src/worker/index.ts 2>&1 | tee -a logs/worker.log'",
     "worker:dev": "tsx --watch src/worker/index.ts",
     "test": "npm run test:unit && npm run test:integration",
     "test:unit": "vitest run --config vitest.unit.config.ts",
@@ -30,7 +30,8 @@
     "test:live": "npm run test:llm:connection && npm run test:embedding:connection && npm run test:s3:connection && npm run test:openrouter:connection",
     "test:watch": "vitest",
     "test:e2e": "PLAYWRIGHT_REUSE_SERVER=true playwright test",
-    "ci": "npm run lint && npm run typecheck && npm run test"
+    "ci": "npm run lint && npm run typecheck && npm run test",
+    "reset": "docker compose exec db psql -U postgres -d doc_llm -c \"DROP SCHEMA IF EXISTS drizzle CASCADE; DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public; CREATE SCHEMA drizzle;\" && npm run db:migrate && npm run db:seed"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.883.0",
