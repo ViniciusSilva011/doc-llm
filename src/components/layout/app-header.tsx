@@ -16,7 +16,7 @@ export async function AppHeader() {
           href="/"
         >
           <Image
-            src="/newimage.png"
+            src="/me.png"
             alt=""
             width={32}
             height={32}
