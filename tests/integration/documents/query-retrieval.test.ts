@@ -17,7 +17,7 @@ import { getSeededUser } from "../../helpers/db";
 import { createPdfBuffer } from "../../helpers/files";
 
 const question = "A IA faz milagres?";
-const pdfStorageKey = "documents/test/ai_text_full_v2.pdf";
+const pdfStorageKey = "documents/test/demon_slayer_comments.pdf";
 
 function createPdfStorage(pdfBuffer: Buffer): ObjectStorageService {
   return {
@@ -50,7 +50,7 @@ async function ingestPdfFixtureForSeededUser() {
   const document = await createDocument({
     ownerId: seededUser.id,
     title: "AI text full v2",
-    originalFilename: "ai_text_full_v2.pdf",
+    originalFilename: "demon_slayer_comments.pdf",
     status: "queued",
     storageBackend: "local",
     storageKey: pdfStorageKey,
@@ -83,7 +83,7 @@ async function ingestPdfFixtureForSeededUser() {
 }
 
 describe("embedding chunk retrieval integration", () => {
-  it("ingests ai_text_full_v2.pdf with Ollama embeddings and retrieves relevant pgvector chunks", async () => {
+  it("ingests demon_slayer_comments.pdf with Ollama embeddings and retrieves relevant pgvector chunks", async () => {
     const sampleEmbedding = await createOpenAIService().createEmbeddings([
       question,
     ]);

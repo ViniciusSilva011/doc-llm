@@ -1,6 +1,9 @@
 import { vi } from "vitest";
 
-import { fetchRelevantChunks } from "@/lib/services/documents/query";
+import {
+  fetchRelevantChunks,
+  formatDocumentSources,
+} from "@/lib/services/documents/query";
 import type { QueryResultChunk } from "@/types/ingestion";
 
 const question = "what is the supply-chain method?";
@@ -37,9 +40,9 @@ describe("fetchRelevantChunks", () => {
 
     const result = await fetchRelevantChunks(question, {}, dependencies);
 
-    expect(dependencies.embeddingProvider.createEmbeddings).toHaveBeenCalledWith([
-      question,
-    ]);
+    expect(
+      dependencies.embeddingProvider.createEmbeddings,
+    ).toHaveBeenCalledWith([question]);
     expect(dependencies.database.query).toHaveBeenCalledWith(
       expect.any(String),
       expect.arrayContaining(["[0.1,0.2,0.3]"]),
@@ -78,9 +81,9 @@ describe("fetchRelevantChunks", () => {
     const [sql] = dependencies.database.query.mock.calls[0] ?? [];
 
     expect(sql).not.toContain(maliciousQuestion);
-    expect(dependencies.embeddingProvider.createEmbeddings).toHaveBeenCalledWith([
-      maliciousQuestion,
-    ]);
+    expect(
+      dependencies.embeddingProvider.createEmbeddings,
+    ).toHaveBeenCalledWith([maliciousQuestion]);
   });
 
   it("uses placeholders for user, document, and limit filters", async () => {
@@ -110,7 +113,9 @@ describe("fetchRelevantChunks", () => {
   it("handles no matching chunks", async () => {
     const dependencies = createDependencies([]);
 
-    await expect(fetchRelevantChunks(question, {}, dependencies)).resolves.toEqual([]);
+    await expect(
+      fetchRelevantChunks(question, {}, dependencies),
+    ).resolves.toEqual([]);
   });
 
   it("propagates embedding and database errors", async () => {
@@ -130,5 +135,28 @@ describe("fetchRelevantChunks", () => {
     await expect(
       fetchRelevantChunks(question, {}, databaseFailure),
     ).rejects.toThrow(databaseError);
+  });
+});
+
+describe("formatDocumentSources", () => {
+  it("formats matching chunks as numbered sources", () => {
+    const sources = formatDocumentSources([
+      {
+        id: 1,
+        documentId: 10,
+        content: "The first chunk.",
+        score: 0.93456,
+      },
+      {
+        id: 2,
+        documentId: 10,
+        content: "The second chunk.",
+        score: 0.8,
+      },
+    ]);
+
+    expect(sources).toBe(
+      "Source 1 (document 10, score 0.935):\nThe first chunk.\n\nSource 2 (document 10, score 0.800):\nThe second chunk.",
+    );
   });
 });

@@ -5,7 +5,9 @@ import path from "node:path";
 import { createPdfBuffer } from "../helpers/files";
 import { signIn } from "./helpers/auth";
 
-test("user uploads a valid pdf and sees it in the dashboard documents list", async ({ page }) => {
+test("user uploads a valid pdf and sees it in the dashboard documents list", async ({
+  page,
+}) => {
   await signIn(page);
 
   const filename = `strategy-memo-${Date.now()}.pdf`;
@@ -31,10 +33,9 @@ test("user uploads a valid pdf and sees it in the dashboard documents list", asy
   await expect(row).toBeVisible();
   await expect(row.getByRole("cell", { name: defaultTitle })).toBeVisible();
   await expect(row.getByRole("link", { name: "Status: queued" })).toBeVisible();
-  await expect(row.getByRole("link", { name: defaultTitle }).first()).toHaveAttribute(
-    "href",
-    /\/documents\/\d+\/chat$/,
-  );
+  await expect(
+    row.getByRole("link", { name: defaultTitle }).first(),
+  ).toHaveAttribute("href", /\/documents\/\d+\/chat$/);
 
   await row.click();
   await expect(page).toHaveURL(/\/documents\/\d+\/chat$/);
@@ -43,16 +44,22 @@ test("user uploads a valid pdf and sees it in the dashboard documents list", asy
   await expect(page.getByText(defaultTitle)).toBeVisible();
 });
 
-test("user uploads the public ai_text_full_v2 pdf with a custom title", async ({ page }) => {
+test("user uploads the public demon_slayer_comments pdf with a custom title", async ({
+  page,
+}) => {
   await signIn(page);
 
   const title = `testing-5.4-${Date.now()}`;
-  const pdfPath = path.resolve(process.cwd(), "public", "ai_text_full_v2.pdf");
+  const pdfPath = path.resolve(
+    process.cwd(),
+    "public",
+    "demon_slayer_comments.pdf",
+  );
   const uploadResponse = await page.request.post("/api/documents/upload", {
     multipart: {
       title,
       file: {
-        name: "ai_text_full_v2.pdf",
+        name: "demon_slayer_comments.pdf",
         mimeType: "application/pdf",
         buffer: readFileSync(pdfPath),
       },
@@ -87,6 +94,8 @@ test("invalid file uploads show a validation error", async ({ page }) => {
 
   expect(uploadResponse.status()).toBe(400);
   await expect(uploadResponse.json()).resolves.toMatchObject({
-    error: expect.stringMatching(/Only PDF files are accepted|application\/pdf/),
+    error: expect.stringMatching(
+      /Only PDF files are accepted|application\/pdf/,
+    ),
   });
 });

@@ -22,6 +22,8 @@
     "test": "npm run test:unit && npm run test:integration",
     "test:unit": "vitest run --config vitest.unit.config.ts",
     "test:integration": "vitest run --config vitest.integration.config.ts",
+    "ask:ai": "tsx scripts/ask-ai.ts",
+    "ask:document": "tsx scripts/ask-document.ts",
     "test:llm:connection": "tsx scripts/check-llm-connection.ts",
     "test:openrouter:connection": "tsx scripts/check-openrouter-connection.ts",
     "test:embedding:connection": "tsx scripts/check-embedding-connection.ts",

@@ -70,7 +70,7 @@ flowchart TD
 flowchart TD
     A["Sign in through UI"] --> B["Open /documents"]
     B --> C["Fill custom title"]
-    C --> D["Select public/ai_text_full_v2.pdf"]
+    C --> D["Select public/demon_slayer_comments.pdf"]
     D --> E["Click Upload PDF"]
     E --> F["Assert success message is visible"]
     F --> G["Find row using custom title"]

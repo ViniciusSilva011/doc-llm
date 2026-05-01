@@ -32,6 +32,15 @@ function toVectorLiteral(embedding: number[]) {
   return `[${embedding.join(",")}]`;
 }
 
+export function formatDocumentSources(matches: QueryResultChunk[]) {
+  return matches
+    .map(
+      (match, index) =>
+        `Source ${index + 1} (document ${match.documentId}, score ${match.score.toFixed(3)}):\n${match.content}`,
+    )
+    .join("\n\n");
+}
+
 export async function fetchRelevantChunks(
   question: string,
   options: FetchRelevantChunksOptions = {},
@@ -118,12 +127,7 @@ export async function generateAnswerFromDocuments(input: {
   }
 
   const openAI = createOpenAIService();
-  const context = matches
-    .map(
-      (match, index) =>
-        `Source ${index + 1} (document ${match.documentId}, score ${match.score.toFixed(3)}):\n${match.content}`,
-    )
-    .join("\n\n");
+  const context = formatDocumentSources(matches);
 
   const answer = await openAI.generateText({
     instructions:

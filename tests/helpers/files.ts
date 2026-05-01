@@ -6,7 +6,7 @@ let samplePdfBuffer: Buffer | undefined;
 export function createPdfBuffer() {
   if (!samplePdfBuffer) {
     samplePdfBuffer = readFileSync(
-      path.resolve(process.cwd(), "public", "ai_text_full_v2.pdf"),
+      path.resolve(process.cwd(), "public", "demon_slayer_comments.pdf"),
     );
   }
 
@@ -19,7 +19,10 @@ export function createPdfFile(filename = "sample.pdf") {
   });
 }
 
-export function createTextFile(filename = "sample.txt", content = "plain text") {
+export function createTextFile(
+  filename = "sample.txt",
+  content = "plain text",
+) {
   return new File([Buffer.from(content, "utf8")], filename, {
     type: "text/plain",
   });

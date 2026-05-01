@@ -15,7 +15,7 @@ import {
   getObjectStorageService,
 } from "@/server/storage";
 
-const SEEDED_PDF_FILENAME = "summit.pdf";
+const SEEDED_PDF_FILENAME = "demon_slayer_comments.pdf";
 const SEEDED_PDF_TITLE = "summit";
 
 async function seedSummitPdf(ownerId: number): Promise<void> {
@@ -84,10 +84,13 @@ async function seedSummitPdf(ownerId: number): Promise<void> {
     });
   } catch (error) {
     await storage.deleteObject(storedObject.key).catch((cleanupError) => {
-      console.error("Failed to clean up seeded PDF object after database error", {
-        storageKey: storedObject.key,
-        cleanupError,
-      });
+      console.error(
+        "Failed to clean up seeded PDF object after database error",
+        {
+          storageKey: storedObject.key,
+          cleanupError,
+        },
+      );
     });
 
     throw error;
