@@ -16,7 +16,7 @@ import {
 } from "@/server/storage";
 
 const SEEDED_PDF_FILENAME = "demon_slayer_comments.pdf";
-const SEEDED_PDF_TITLE = "summit";
+const SEEDED_PDF_TITLE = "demon_slayer_comments";
 
 async function seedSummitPdf(ownerId: number): Promise<void> {
   const [existingDocument] = await db
