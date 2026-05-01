@@ -1,0 +1,13 @@
+{
+  "root": true,
+  "extends": ["next/core-web-vitals", "next/typescript", "prettier"],
+  "ignorePatterns": [
+    ".codex/**",
+    ".next/**",
+    "coverage/**",
+    "dist/**",
+    "node_modules/**",
+    "playwright-report/**",
+    "test-results/**"
+  ]
+}

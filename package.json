@@ -31,7 +31,7 @@
     "test:s3:connection": "tsx scripts/check-s3-connection.ts",
     "test:live": "npm run test:llm:connection && npm run test:embedding:connection && npm run test:s3:connection && npm run test:openrouter:connection",
     "test:watch": "vitest",
-    "test:e2e": "PLAYWRIGHT_REUSE_SERVER=true playwright test",
+    "test:e2e": "PLAYWRIGHT_APP_URL=${PLAYWRIGHT_APP_URL:-http://localhost:3100} PLAYWRIGHT_REUSE_SERVER=true playwright test",
     "ci": "npm run lint && npm run typecheck && npm run test",
     "reset": "docker compose exec db psql -U postgres -d doc_llm -c \"DROP SCHEMA IF EXISTS drizzle CASCADE; DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public; CREATE SCHEMA drizzle;\" && npm run db:migrate && npm run db:seed"
   },

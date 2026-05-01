@@ -16,7 +16,7 @@ import type { ObjectStorageService } from "@/server/storage";
 import { getSeededUser } from "../../helpers/db";
 import { createPdfBuffer } from "../../helpers/files";
 
-const question = "A IA faz milagres?";
+const question = "Who described the movie as deep and spiritual?";
 const pdfStorageKey = "documents/test/demon_slayer_comments.pdf";
 
 function createPdfStorage(pdfBuffer: Buffer): ObjectStorageService {

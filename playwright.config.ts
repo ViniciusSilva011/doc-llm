@@ -13,6 +13,7 @@ if (!appUrl) {
 }
 
 const appPort = new URL(appUrl).port || "3100";
+const appHost = new URL(appUrl).hostname;
 const reuseExistingServer = process.env.PLAYWRIGHT_REUSE_SERVER === "true";
 const databaseUrl = process.env.TEST_DATABASE_URL ?? process.env.DATABASE_URL;
 
@@ -32,7 +33,7 @@ export default defineConfig({
     trace: "on-first-retry",
   },
   webServer: {
-    command: `tsx tests/e2e/setup-db.ts && npm run dev -- --hostname localhost --port ${appPort}`,
+    command: `tsx tests/e2e/setup-db.ts && npm run dev -- --hostname ${appHost} --port ${appPort}`,
     url: appUrl,
     env: {
       ...process.env,

@@ -64,6 +64,66 @@ export async function seedTestUser() {
     });
 }
 
+export async function seedDemoChatDocument() {
+  const { pool } = await import("@/db/client");
+  const user = await getSeededUser();
+
+  await pool.query(
+    `
+      INSERT INTO documents (
+        id,
+        owner_id,
+        title,
+        original_filename,
+        status,
+        storage_backend,
+        storage_key,
+        content_type,
+        byte_size,
+        metadata,
+        last_ingested_at,
+        updated_at
+      )
+      OVERRIDING SYSTEM VALUE
+      VALUES (
+        1,
+        $1,
+        'Demo Chat PDF',
+        'demo-chat.pdf',
+        'processed',
+        'local',
+        'documents/demo-chat.pdf',
+        'application/pdf',
+        1024,
+        '{}'::jsonb,
+        now(),
+        now()
+      )
+      ON CONFLICT (id) DO UPDATE SET
+        owner_id = EXCLUDED.owner_id,
+        title = EXCLUDED.title,
+        original_filename = EXCLUDED.original_filename,
+        status = EXCLUDED.status,
+        storage_backend = EXCLUDED.storage_backend,
+        storage_key = EXCLUDED.storage_key,
+        content_type = EXCLUDED.content_type,
+        byte_size = EXCLUDED.byte_size,
+        metadata = EXCLUDED.metadata,
+        last_ingested_at = EXCLUDED.last_ingested_at,
+        updated_at = EXCLUDED.updated_at;
+    `,
+    [user.id],
+  );
+
+  await pool.query(`
+    SELECT setval(
+      pg_get_serial_sequence('documents', 'id'),
+      GREATEST((SELECT MAX(id) FROM documents), 1),
+      true
+    );
+  `);
+}
+
 export async function getSeededUser() {
   const { db } = await import("@/db/client");
   const { users } = await import("@/db/schema");
